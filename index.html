@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GRIMNIR | Orchestrated, evidence-gated pentesting</title>
+<meta name="description" content="Grimnir is an orchestrator for authorized penetration tests and bug bounty work. Six specialist agents, one report, and a rule that no finding ships until it is confirmed.">
+<link rel="stylesheet" href="style.css?v=e94f425">
+<script src="script.js?v=e94f425" defer></script>
+</head>
+<body>
+
+<nav id="navbar">
+  <a class="brand" href="#top">GRIMNIR<span class="plasma">.</span></a>
+  <div class="links">
+    <a href="architecture.html">Architecture</a>
+    <a href="#gate">Evidence gate</a>
+    <a href="#team">Team</a>
+    <a href="#targets">Targets</a>
+    <a href="#toolkit">Toolkit</a>
+    <a href="#platforms">Platforms</a>
+    <a href="#start">Get started</a>
+  </div>
+  <a class="btn" href="https://github.com/DoctorGoz/grimnir" target="_blank" rel="noopener">Repository</a>
+</nav>
+
+<header class="hero" id="top">
+  <img src="./assets/hero.png" alt="" onerror="this.style.display='none'">
+  <div class="shade"></div><div class="glow"></div>
+  <div class="wrap">
+    <h1>Fast to start<span class="plasma">.</span></h1>
+    <h2 class="drama">Proven before <span class="plasma">it ships.</span></h2>
+    <p class="pitch">Grimnir is an orchestrator for authorized penetration tests and bug bounty work. It classifies a target, scopes it, hands the work to six specialist agents, and compiles one report. No finding reaches that report until it has been reproduced.</p>
+    <div class="cta">
+      <a class="btn lg" href="#start">Get started</a>
+      <a class="btn lg ghost" href="#gate">How findings get proven</a>
+    </div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+    <p class="statement drama">Most of the cost of a finding is not finding it. It is <span class="plasma">proving it to someone else.</span></p>
+  </div>
+</section>
+
+<section id="overview">
+  <div class="wrap">
+    <div class="eyebrow">At a glance</div>
+    <h2>One orchestrator. Six specialists. <span class="plasma">One gate.</span></h2>
+    <p class="lede">You describe a target. Grimnir classifies it, scopes it, and delegates: HUGINN maps the surface, the right specialists test it, and nothing reaches the report until the evidence gate confirms it. Every step reads and writes the same engagement directory.</p>
+    <figure class="dgfig"><div class="only-d"><svg class="dg dg-wide" viewBox="0 0 1200 598" role="img" aria-labelledby="t-ov d-ov" xmlns="http://www.w3.org/2000/svg"><title id="t-ov">Grimnir at a glance</title><desc id="d-ov">The operator drives the GRIMNIR orchestrator, which classifies, scopes and plans, then hands off to HUGINN for recon first. HUGINN&#x27;s asset map feeds the five specialist agents Specter, ARTEMIS, Hunter, Nimbus and Nomad. Their candidate findings pass an evidence gate from theoretical to confirmed, then the report compiler writes the report. A shared intel feed and the engagement directory hold state for every step.</desc><defs><marker id="ah-ov" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><text x="60.0" y="34" class="t l" text-anchor="middle">OPERATOR</text><text x="230.0" y="34" class="t l" text-anchor="middle">PLAN</text><text x="415.0" y="34" class="t l" text-anchor="middle">RECON FIRST</text><text x="600.0" y="34" class="t l" text-anchor="middle">TEST</text><text x="790.0" y="34" class="t l" text-anchor="middle">PROVE</text><text x="955.0" y="34" class="t l" text-anchor="middle">COMPILE</text><text x="1120.0" y="34" class="t l" text-anchor="middle">OUTPUT</text><rect x="10" y="214" width="100" height="60" rx="12" class="n op"/><text x="60.0" y="249.0" class="t h" text-anchor="middle">Operator</text><rect x="140" y="180" width="180" height="130" rx="12" class="n hub"/><text x="230.0" y="237.0" class="t h" text-anchor="middle">GRIMNIR</text><text x="230.0" y="254.0" class="t s" text-anchor="middle">classify, scope,</text><text x="230.0" y="268.0" class="t s" text-anchor="middle">plan, delegate</text><rect x="350" y="210" width="130" height="68" rx="12" class="n ac"/><text x="415.0" y="241.0" class="t h" text-anchor="middle">HUGINN</text><text x="415.0" y="258.0" class="t s" text-anchor="middle">Phase 0 recon</text><rect x="520" y="95" width="160" height="50" rx="12" class="n"/><text x="600.0" y="117.0" class="t h" text-anchor="middle">Specter</text><text x="600.0" y="134.0" class="t s" text-anchor="middle">API and web</text><path d="M480 244 C500.0 244 500.0 120 520 120" class="a flow" marker-end="url(#ah-ov)"/><path d="M680 120 L700 120" class="a2"/><path d="M700 120 L700 244" class="a2"/><rect x="520" y="157" width="160" height="50" rx="12" class="n"/><text x="600.0" y="179.0" class="t h" text-anchor="middle">ARTEMIS</text><text x="600.0" y="196.0" class="t s" text-anchor="middle">GenAI, LLM, MCP</text><path d="M480 244 C500.0 244 500.0 182 520 182" class="a flow" marker-end="url(#ah-ov)"/><path d="M680 182 L700 182" class="a2"/><path d="M700 182 L700 244" class="a2"/><rect x="520" y="219" width="160" height="50" rx="12" class="n"/><text x="600.0" y="241.0" class="t h" text-anchor="middle">Hunter</text><text x="600.0" y="258.0" class="t s" text-anchor="middle">network and AD</text><path d="M480 244 C500.0 244 500.0 244 520 244" class="a flow" marker-end="url(#ah-ov)"/><path d="M680 244 L700 244" class="a2"/><path d="M700 244 L700 244" class="a2"/><rect x="520" y="281" width="160" height="50" rx="12" class="n"/><text x="600.0" y="303.0" class="t h" text-anchor="middle">Nimbus</text><text x="600.0" y="320.0" class="t s" text-anchor="middle">cloud</text><path d="M480 244 C500.0 244 500.0 306 520 306" class="a flow" marker-end="url(#ah-ov)"/><path d="M680 306 L700 306" class="a2"/><path d="M700 306 L700 244" class="a2"/><rect x="520" y="343" width="160" height="50" rx="12" class="n"/><text x="600.0" y="365.0" class="t h" text-anchor="middle">Nomad</text><text x="600.0" y="382.0" class="t s" text-anchor="middle">mobile</text><path d="M480 244 C500.0 244 500.0 368 520 368" class="a flow" marker-end="url(#ah-ov)"/><path d="M680 368 L700 368" class="a2"/><path d="M700 368 L700 244" class="a2"/><rect x="720" y="204" width="140" height="80" rx="12" class="n gate"/><text x="790.0" y="236.0" class="t h" text-anchor="middle">Evidence gate</text><text x="790.0" y="253.0" class="t s" text-anchor="middle">theoretical</text><text x="790.0" y="267.0" class="t s" text-anchor="middle">to confirmed</text><path d="M700 244 L720 244" class="a" marker-end="url(#ah-ov)"/><rect x="890" y="214" width="130" height="60" rx="12" class="n"/><text x="955.0" y="241.0" class="t h" text-anchor="middle">Compiler</text><text x="955.0" y="258.0" class="t s" text-anchor="middle">merge, dedup</text><rect x="1050" y="214" width="140" height="60" rx="12" class="n op"/><text x="1120.0" y="241.0" class="t h" text-anchor="middle">Report</text><text x="1120.0" y="258.0" class="t s" text-anchor="middle">confirmed only</text><path d="M110 244 L140 244" class="a" marker-end="url(#ah-ov)"/><path d="M320 244 L350 244" class="a" marker-end="url(#ah-ov)"/><path d="M860 244 L890 244" class="a" marker-end="url(#ah-ov)"/><path d="M1020 244 L1050 244" class="a" marker-end="url(#ah-ov)"/><rect x="350" y="425" width="670" height="42" rx="10" class="n st"/><text x="685" y="451" class="t h" text-anchor="middle">intel.jsonl: shared cross-agent feed, routing-tagged</text><path d="M415 278 L415 425" class="d"/><path d="M600 393 L600 425" class="d"/><path d="M790 284 L790 425" class="d"/><rect x="140" y="500" width="1050" height="88" rx="10" class="n st"/><text x="665" y="528" class="t h" text-anchor="middle">Engagement directory: $GRIMNIR_WORKSPACE/project/</text><text x="665" y="552" class="t s" text-anchor="middle">scope.md  roe.json  state.json  asset-map.json  intel.jsonl  decisions.jsonl  activity.jsonl</text><text x="665" y="572" class="t s" text-anchor="middle">per-agent findings/  evidence/  reports/  report.md</text><path d="M230 310 L230 500" class="d"/><path d="M685 467 L685 500" class="d"/></svg></div><div class="only-m"><svg class="dg dg-narrow" viewBox="0 0 372 820" role="img" aria-labelledby="t-ovm d-ovm" xmlns="http://www.w3.org/2000/svg"><title id="t-ovm">Grimnir at a glance, stacked</title><desc id="d-ovm">Operator, GRIMNIR orchestrator, HUGINN recon, five specialist agents, evidence gate, report compiler and report, with a shared intel feed and the engagement directory as common state.</desc><defs><marker id="ah-ovm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><rect x="24" y="10" width="290" height="44" rx="12" class="n op"/><text x="169.0" y="37.0" class="t h" text-anchor="middle">Operator</text><path d="M169 54 L169 76" class="a" marker-end="url(#ah-ovm)"/><rect x="24" y="76" width="290" height="70" rx="12" class="n hub"/><text x="169.0" y="108.0" class="t h" text-anchor="middle">GRIMNIR</text><text x="169.0" y="125.0" class="t s" text-anchor="middle">classify, scope, plan, delegate</text><path d="M169 146 L169 168" class="a" marker-end="url(#ah-ovm)"/><rect x="24" y="168" width="290" height="56" rx="12" class="n ac"/><text x="169.0" y="193.0" class="t h" text-anchor="middle">HUGINN</text><text x="169.0" y="210.0" class="t s" text-anchor="middle">Phase 0 recon, always first</text><path d="M169 224 L169 246" class="a" marker-end="url(#ah-ovm)"/><rect x="24" y="246" width="141" height="52" rx="12" class="n"/><text x="94.5" y="269.0" class="t h" text-anchor="middle">Specter</text><text x="94.5" y="286.0" class="t s" text-anchor="middle">API and web</text><rect x="173" y="246" width="141" height="52" rx="12" class="n"/><text x="243.5" y="269.0" class="t h" text-anchor="middle">ARTEMIS</text><text x="243.5" y="286.0" class="t s" text-anchor="middle">GenAI, LLM, MCP</text><rect x="24" y="308" width="141" height="52" rx="12" class="n"/><text x="94.5" y="331.0" class="t h" text-anchor="middle">Hunter</text><text x="94.5" y="348.0" class="t s" text-anchor="middle">network and AD</text><rect x="173" y="308" width="141" height="52" rx="12" class="n"/><text x="243.5" y="331.0" class="t h" text-anchor="middle">Nimbus</text><text x="243.5" y="348.0" class="t s" text-anchor="middle">cloud</text><rect x="24" y="370" width="290" height="52" rx="12" class="n"/><text x="169.0" y="393.0" class="t h" text-anchor="middle">Nomad</text><text x="169.0" y="410.0" class="t s" text-anchor="middle">mobile</text><path d="M169 432 L169 454" class="a" marker-end="url(#ah-ovm)"/><rect x="24" y="454" width="290" height="60" rx="12" class="n gate"/><text x="169.0" y="481.0" class="t h" text-anchor="middle">Evidence gate</text><text x="169.0" y="498.0" class="t s" text-anchor="middle">theoretical to confirmed</text><path d="M169 514 L169 536" class="a" marker-end="url(#ah-ovm)"/><rect x="24" y="536" width="290" height="44" rx="12" class="n"/><text x="169.0" y="555.0" class="t h" text-anchor="middle">Report compiler</text><text x="169.0" y="572.0" class="t s" text-anchor="middle">merge, dedup</text><path d="M169 580 L169 602" class="a" marker-end="url(#ah-ovm)"/><rect x="24" y="602" width="290" height="44" rx="12" class="n op"/><text x="169.0" y="621.0" class="t h" text-anchor="middle">Report</text><text x="169.0" y="638.0" class="t s" text-anchor="middle">confirmed findings only</text><path d="M340 196 L340 484" class="d"/><path d="M314 196 L340 196" class="d"/><path d="M314 334 L340 334" class="d"/><path d="M314 484 L340 484" class="d"/><text transform="translate(358 311) rotate(90)" class="t s" text-anchor="middle">shared intel feed</text><rect x="24" y="668" width="290" height="40" rx="10" class="n st"/><text x="169" y="693" class="t h" text-anchor="middle">intel.jsonl: shared feed</text><rect x="24" y="720" width="290" height="92" rx="10" class="n st"/><text x="169" y="744" class="t h" text-anchor="middle">Engagement directory</text><text x="169" y="764" class="t s" text-anchor="middle">scope.md  roe.json  state.json</text><text x="169" y="780" class="t s" text-anchor="middle">asset-map.json  decisions.jsonl</text><text x="169" y="796" class="t s" text-anchor="middle">findings/  evidence/  report.md</text></svg></div></figure>
+    <p class="dim"><a class="plasma" href="architecture.html">See the full architecture &rarr;</a></p>
+  </div>
+</section>
+
+<section id="gate">
+  <div class="wrap">
+    <div class="eyebrow">The differentiator</div>
+    <h2>Findings are born theoretical.</h2>
+    <p class="lede">Grimnir makes proof a property of the data, not a habit you have to remember. Every finding carries a validation state, and a single script is allowed to promote it, from evidence a confirmation primitive produced.</p>
+    <div class="states">
+      <span class="state">theoretical (default)</span>
+      <span class="state">validated</span>
+      <span class="state on">confirmed</span>
+      <span class="state">refuted</span>
+    </div>
+    <div class="grid g2 dgpair">
+      <figure class="dgfig"><svg class="dg dg-panel" viewBox="0 0 400 372" role="img" aria-labelledby="t-life d-life" xmlns="http://www.w3.org/2000/svg"><title id="t-life">Evidence gate lifecycle</title><desc id="d-life">A finding is born theoretical. A reproducible proof of concept plus an independent check (negative control, screenshot or out-of-band hit) promotes it to confirmed; a failed check marks it refuted. Only confirmed findings ship.</desc><defs><marker id="ah-life" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><rect x="110" y="10" width="180" height="56" rx="12" class="n"/><text x="200.0" y="35.0" class="t h" text-anchor="middle">Finding</text><text x="200.0" y="52.0" class="t s" text-anchor="middle">born theoretical</text><path d="M200 66 L200 102" class="a" marker-end="url(#ah-life)"/><rect x="20" y="102" width="360" height="128" rx="12" class="n"/><text x="200" y="126" class="t h" text-anchor="middle">PoC + independent check</text><rect x="30" y="142" width="108" height="30" rx="15" class="chip"/><text x="84" y="162" class="t s xs" text-anchor="middle">negative control</text><rect x="146" y="142" width="108" height="30" rx="15" class="chip"/><text x="200" y="162" class="t s xs" text-anchor="middle">screenshot</text><rect x="262" y="142" width="108" height="30" rx="15" class="chip"/><text x="316" y="162" class="t s xs" text-anchor="middle">out-of-band</text><text x="200" y="198" class="t s" text-anchor="middle">validate-finding.sh reads the verdict</text><text x="200" y="216" class="t s" text-anchor="middle">High and Critical need the class artifact</text><path d="M120 230 L95 276" class="a" marker-end="url(#ah-life)"/><path d="M280 230 L305 276" class="a" marker-end="url(#ah-life)"/><rect x="10" y="276" width="170" height="56" rx="12" class="n gate"/><text x="95.0" y="301.0" class="t h" text-anchor="middle">confirmed</text><text x="95.0" y="318.0" class="t s" text-anchor="middle">can ship</text><rect x="220" y="276" width="170" height="56" rx="12" class="n bad"/><text x="305.0" y="301.0" class="t h" text-anchor="middle">refuted</text><text x="305.0" y="318.0" class="t s" text-anchor="middle">never ships</text><text x="200" y="358" class="t s" text-anchor="middle">theoretical findings stay in an appendix</text></svg><figcaption>Promotion needs reproducible proof plus an independent check.</figcaption></figure>
+      <figure class="dgfig"><svg class="dg dg-panel" viewBox="0 0 400 338" role="img" aria-labelledby="t-claims d-claims" xmlns="http://www.w3.org/2000/svg"><title id="t-claims">Claim-split severity floor</title><desc id="d-claims">A finding lists a base claim plus escalations. Each claim is tested independently. If an escalation is refuted, the filed severity drops to the highest claim that survived instead of the whole finding being discarded.</desc><defs><marker id="ah-claims" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><text x="200" y="18" class="t l" text-anchor="middle">CLAIMS, EACH TESTED ON ITS OWN</text><rect x="10" y="34" width="250" height="52" rx="12" class="n gate"/><text x="24" y="57" class="t h" text-anchor="start">Base claim</text><text x="24" y="75" class="t s" text-anchor="start">unauthorized read</text><rect x="272" y="45" width="118" height="30" rx="15" class="chip ok"/><text x="331" y="65" class="t s" text-anchor="middle">survived</text><rect x="10" y="98" width="250" height="52" rx="12" class="n gate"/><text x="24" y="121" class="t h" text-anchor="start">Escalation 1</text><text x="24" y="139" class="t s" text-anchor="start">write access</text><rect x="272" y="109" width="118" height="30" rx="15" class="chip ok"/><text x="331" y="129" class="t s" text-anchor="middle">survived</text><rect x="10" y="162" width="250" height="52" rx="12" class="n bad"/><text x="24" y="185" class="t h" text-anchor="start">Escalation 2</text><text x="24" y="203" class="t s" text-anchor="start">account takeover</text><rect x="272" y="173" width="118" height="30" rx="15" class="chip no"/><text x="331" y="193" class="t s" text-anchor="middle">refuted</text><path d="M200 218 L200 248" class="a" marker-end="url(#ah-claims)"/><rect x="10" y="248" width="380" height="80" rx="12" class="n gate"/><text x="200" y="274" class="t h" text-anchor="middle">Filed severity = the floor</text><text x="200" y="294" class="t s" text-anchor="middle">highest severity whose claims all survived</text><text x="200" y="312" class="t s" text-anchor="middle">lowered, not killed</text></svg><figcaption>A refuted escalation lowers the severity; it does not kill the finding.</figcaption></figure>
+    </div>
+    <div class="grid g3">
+      <div class="card rv">
+        <h3>Confirmation harness</h3>
+        <p>Primitives for differential authorization, authentication, tier checks, out-of-band SSRF, SSTI, SQL injection, XSS, JWT, races and MCP each write a machine-readable verdict. Promotion cannot claim more than the verdict says. Most run on stdlib Python.</p>
+      </div>
+      <div class="card rv">
+        <h3>Evidence gate</h3>
+        <p>A High or Critical finding without the class-appropriate artifact (a negative control, a screenshot, an out-of-band hit) is hard-blocked from promotion. Only confirmed or validated findings reach a report body; theoretical ones sit in an appendix and are never submitted.</p>
+      </div>
+      <div class="card rv">
+        <h3>Claim-split verification</h3>
+        <p>A finding lists a base claim plus its escalations, and each is tested on its own. Refute one escalation and the filed severity drops to the highest claim that survived, instead of the whole finding being thrown out. The hygiene check warns when a draft claims more than that floor.</p>
+      </div>
+      <div class="card rv">
+        <h3>Fresh-eyes review</h3>
+        <p>Pack a finding, its evidence and its repro script into an isolated packet for a reviewer with no engagement context, and see whether it stands on its own.</p>
+      </div>
+      <div class="card rv">
+        <h3>Report hygiene</h3>
+        <p>A linter checks outbound reports for internal identifiers, codenames and stray punctuation before filing. Templates cover a single-finding bounty report, a rebuttal playbook and a pre-submission checklist.</p>
+      </div>
+      <div class="card rv">
+        <h3>Coverage with a denominator</h3>
+        <p>Scope is reconciled against what was tested (tested, skipped, gated, untouched), and an engagement cannot close on the assets that happened to get attention. Coverage is reported as "22 of 811 endpoints", never "airtight".</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="flow">
+  <div class="wrap">
+    <div class="eyebrow">How an engagement runs</div>
+    <h2>Recon first. Then the right specialist.</h2>
+    <p class="lede">Grimnir is a methodology layer, not a scanner. It decides where to spend effort, keeps testing inside scope and inside the program's rules, and turns "I think this is a bug" into something a triager can reproduce.</p>
+    <figure class="dgfig"><div class="only-d"><svg class="dg dg-wide" viewBox="0 0 1210 150" role="img" aria-labelledby="t-flow d-flow" xmlns="http://www.w3.org/2000/svg"><title id="t-flow">Engagement flow</title><desc id="d-flow">Eight steps: engage, classify, scope and rules of engagement, recon, playbook match, dispatch, confirm, report.</desc><defs><marker id="ah-flow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><rect x="2" y="50" width="124" height="84" rx="12" class="n "/><circle cx="22" cy="50" r="14" class="num"/><text x="22" y="55" class="t nn" text-anchor="middle">1</text><text x="64.0" y="92" class="t h" text-anchor="middle">/engage</text><text x="64.0" y="112" class="t s" text-anchor="middle">intake</text><path d="M126 92 L155 92" class="a" marker-end="url(#ah-flow)"/><rect x="155" y="50" width="124" height="84" rx="12" class="n "/><circle cx="175" cy="50" r="14" class="num"/><text x="175" y="55" class="t nn" text-anchor="middle">2</text><text x="217.0" y="92" class="t h" text-anchor="middle">Classify</text><text x="217.0" y="112" class="t s" text-anchor="middle">lead agent</text><path d="M279 92 L308 92" class="a" marker-end="url(#ah-flow)"/><rect x="308" y="50" width="124" height="84" rx="12" class="n "/><circle cx="328" cy="50" r="14" class="num"/><text x="328" y="55" class="t nn" text-anchor="middle">3</text><text x="370.0" y="92" class="t h" text-anchor="middle">Scope + RoE</text><text x="370.0" y="112" class="t s" text-anchor="middle">roe.json</text><path d="M432 92 L461 92" class="a" marker-end="url(#ah-flow)"/><rect x="461" y="50" width="124" height="84" rx="12" class="n "/><circle cx="481" cy="50" r="14" class="num"/><text x="481" y="55" class="t nn" text-anchor="middle">4</text><text x="523.0" y="92" class="t h" text-anchor="middle">Recon</text><text x="523.0" y="112" class="t s" text-anchor="middle">HUGINN</text><path d="M585 92 L614 92" class="a" marker-end="url(#ah-flow)"/><rect x="614" y="50" width="124" height="84" rx="12" class="n "/><circle cx="634" cy="50" r="14" class="num"/><text x="634" y="55" class="t nn" text-anchor="middle">5</text><text x="676.0" y="92" class="t h" text-anchor="middle">Playbooks</text><text x="676.0" y="112" class="t s" text-anchor="middle">REACHABLE first</text><path d="M738 92 L767 92" class="a" marker-end="url(#ah-flow)"/><rect x="767" y="50" width="124" height="84" rx="12" class="n "/><circle cx="787" cy="50" r="14" class="num"/><text x="787" y="55" class="t nn" text-anchor="middle">6</text><text x="829.0" y="92" class="t h" text-anchor="middle">Dispatch</text><text x="829.0" y="112" class="t s" text-anchor="middle">specialists</text><path d="M891 92 L920 92" class="a" marker-end="url(#ah-flow)"/><rect x="920" y="50" width="124" height="84" rx="12" class="n gate"/><circle cx="940" cy="50" r="14" class="num"/><text x="940" y="55" class="t nn" text-anchor="middle">7</text><text x="982.0" y="92" class="t h" text-anchor="middle">Confirm</text><text x="982.0" y="112" class="t s" text-anchor="middle">evidence gate</text><path d="M1044 92 L1073 92" class="a" marker-end="url(#ah-flow)"/><rect x="1073" y="50" width="124" height="84" rx="12" class="n "/><circle cx="1093" cy="50" r="14" class="num"/><text x="1093" y="55" class="t nn" text-anchor="middle">8</text><text x="1135.0" y="92" class="t h" text-anchor="middle">Report</text><text x="1135.0" y="112" class="t s" text-anchor="middle">report.md</text></svg></div><div class="only-m"><svg class="dg dg-narrow" viewBox="0 0 320 554" role="img" aria-labelledby="t-flowm d-flowm" xmlns="http://www.w3.org/2000/svg"><title id="t-flowm">Engagement flow, stacked</title><desc id="d-flowm">Eight steps from engage to report.</desc><defs><marker id="ah-flowm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><rect x="10" y="6" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="32" r="14" class="num"/><text x="38" y="37" class="t nn" text-anchor="middle">1</text><text x="62" y="29" class="t h" text-anchor="start">/engage</text><text x="62" y="47" class="t s" text-anchor="start">intake</text><path d="M160 58 L160 76" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="76" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="102" r="14" class="num"/><text x="38" y="107" class="t nn" text-anchor="middle">2</text><text x="62" y="99" class="t h" text-anchor="start">Classify</text><text x="62" y="117" class="t s" text-anchor="start">pick the lead agent</text><path d="M160 128 L160 146" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="146" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="172" r="14" class="num"/><text x="38" y="177" class="t nn" text-anchor="middle">3</text><text x="62" y="169" class="t h" text-anchor="start">Scope + RoE</text><text x="62" y="187" class="t s" text-anchor="start">scope.md, roe.json</text><path d="M160 198 L160 216" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="216" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="242" r="14" class="num"/><text x="38" y="247" class="t nn" text-anchor="middle">4</text><text x="62" y="239" class="t h" text-anchor="start">Recon</text><text x="62" y="257" class="t s" text-anchor="start">HUGINN, asset map</text><path d="M160 268 L160 286" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="286" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="312" r="14" class="num"/><text x="38" y="317" class="t nn" text-anchor="middle">5</text><text x="62" y="309" class="t h" text-anchor="start">Playbook match</text><text x="62" y="327" class="t s" text-anchor="start">REACHABLE lanes first</text><path d="M160 338 L160 356" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="356" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="382" r="14" class="num"/><text x="38" y="387" class="t nn" text-anchor="middle">6</text><text x="62" y="379" class="t h" text-anchor="start">Dispatch</text><text x="62" y="397" class="t s" text-anchor="start">specialists test the lanes</text><path d="M160 408 L160 426" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="426" width="300" height="52" rx="12" class="n gate"/><circle cx="38" cy="452" r="14" class="num"/><text x="38" y="457" class="t nn" text-anchor="middle">7</text><text x="62" y="449" class="t h" text-anchor="start">Confirm</text><text x="62" y="467" class="t s" text-anchor="start">evidence gate</text><path d="M160 478 L160 496" class="a" marker-end="url(#ah-flowm)"/><rect x="10" y="496" width="300" height="52" rx="12" class="n "/><circle cx="38" cy="522" r="14" class="num"/><text x="38" y="527" class="t nn" text-anchor="middle">8</text><text x="62" y="519" class="t h" text-anchor="start">Report</text><text x="62" y="537" class="t s" text-anchor="start">report.md</text></svg></div></figure>
+    <div class="grid g3">
+      <div class="pillar rv"><h3>Reachability first</h3><p>An intelligence layer sets a spend, skip or gated prior for each lane before expensive testing starts.</p></div>
+      <div class="pillar rv"><h3>Playbooks, REACHABLE-first</h3><p>Declarative attack chains are ranked against the asset map, then rendered as runnable commands ending in a confirm step.</p></div>
+      <div class="pillar rv"><h3>One shared intel feed</h3><p>Agents append to a cross-agent feed, so a secret found in an APK or a script reaches the specialist who can use it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="team">
+  <div class="wrap">
+    <div class="eyebrow">The team</div>
+    <h2>Six specialists, one orchestrator.</h2>
+    <p class="lede">Each agent is a full methodology definition with its own scripts. HUGINN always runs first; a report compiler merges everyone's confirmed findings, deduplicates across domains and surfaces cross-domain chains.</p>
+    <div class="grid g3">
+      <div class="card rv"><span class="tag">ALWAYS FIRST</span><h3>HUGINN</h3><p>Recon: subdomains, ports, tech fingerprint, crawling and JS analysis, producing the asset map and the intel feed.</p></div>
+      <div class="card rv"><span class="tag">API &amp; WEB</span><h3>Specter</h3><p>REST, GraphQL, gRPC and traditional web apps: auth, authorization, injection, business logic, WAF bypass.</p><div class="pill-row"><span class="pill">OWASP API Top 10</span><span class="pill">WSTG</span></div></div>
+      <div class="card rv"><span class="tag">GENAI &amp; MCP</span><h3>ARTEMIS</h3><p>Prompt injection, jailbreaks, system-prompt extraction, RAG poisoning, agentic abuse, guardrail bypass and MCP servers.</p><div class="pill-row"><span class="pill">OWASP LLM</span><span class="pill">Agentic</span><span class="pill">MCP Top 10</span><span class="pill">ATLAS</span></div></div>
+      <div class="card rv"><span class="tag">NETWORK</span><h3>Hunter</h3><p>Host and service enumeration, vulnerability scanning, credential attacks, exploitation, privilege escalation and lateral movement.</p><div class="pill-row"><span class="pill">PTES</span><span class="pill">MITRE ATT&amp;CK</span></div></div>
+      <div class="card rv"><span class="tag">CLOUD</span><h3>Nimbus</h3><p>AWS, Azure and GCP IAM and privilege escalation, storage exposure, metadata and SSRF credential theft, serverless, Kubernetes and containers.</p><div class="pill-row"><span class="pill">ATT&amp;CK Cloud</span><span class="pill">CIS</span></div></div>
+      <div class="card rv"><span class="tag">MOBILE</span><h3>Nomad</h3><p>Android and iOS: static and dynamic analysis, traffic interception, Frida, deeplink and IPC abuse, insecure storage, certificate-pinning bypass.</p><div class="pill-row"><span class="pill">MASVS</span><span class="pill">MASTG</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="targets">
+  <div class="wrap">
+    <div class="eyebrow">What it tests</div>
+    <h2>Targets Grimnir knows how to classify.</h2>
+    <p class="lede">Classification picks the lead agent. Mixed targets get several, and a mobile app, an MCP tool or a cloud console is usually treated as a thin layer over a backend API that Specter picks up.</p>
+    <figure class="dgfig narrowfig"><svg class="dg dg-panel" viewBox="0 0 400 400" role="img" aria-labelledby="t-targets d-targets" xmlns="http://www.w3.org/2000/svg"><title id="t-targets">Target to agent map</title><desc id="d-targets">Web apps and APIs go to Specter; LLM apps and MCP servers to ARTEMIS with Specter for the backend; networks and AD to Hunter; cloud to Nimbus; mobile to Nomad; Salesforce Experience Cloud to Specter.</desc><defs><marker id="ah-targets" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><text x="102" y="16" class="t l" text-anchor="middle">TARGET</text><text x="318" y="16" class="t l" text-anchor="middle">LEADS</text><rect x="4" y="28" width="196" height="40" rx="12" class="n"/><text x="102" y="53" class="t h" text-anchor="middle">Web apps and APIs</text><path d="M200 48 L238 48" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="28" width="156" height="40" rx="12" class="n ac"/><text x="318" y="53" class="t h" text-anchor="middle">Specter</text><rect x="4" y="78" width="196" height="40" rx="12" class="n"/><text x="102" y="103" class="t h" text-anchor="middle">LLM, RAG, agents</text><path d="M200 98 L238 98" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="78" width="156" height="40" rx="12" class="n ac"/><text x="318" y="95" class="t h" text-anchor="middle">ARTEMIS</text><text x="318" y="109" class="t s xs" text-anchor="middle">+ Specter for tool APIs</text><rect x="4" y="128" width="196" height="40" rx="12" class="n"/><text x="102" y="153" class="t h" text-anchor="middle">MCP servers</text><path d="M200 148 L238 148" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="128" width="156" height="40" rx="12" class="n ac"/><text x="318" y="145" class="t h" text-anchor="middle">ARTEMIS</text><text x="318" y="159" class="t s xs" text-anchor="middle">+ Specter for backend</text><rect x="4" y="178" width="196" height="40" rx="12" class="n"/><text x="102" y="203" class="t h" text-anchor="middle">Networks and AD</text><path d="M200 198 L238 198" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="178" width="156" height="40" rx="12" class="n ac"/><text x="318" y="203" class="t h" text-anchor="middle">Hunter</text><rect x="4" y="228" width="196" height="40" rx="12" class="n"/><text x="102" y="253" class="t h" text-anchor="middle">Cloud</text><path d="M200 248 L238 248" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="228" width="156" height="40" rx="12" class="n ac"/><text x="318" y="245" class="t h" text-anchor="middle">Nimbus</text><text x="318" y="259" class="t s xs" text-anchor="middle">+ Specter for hosted apps</text><rect x="4" y="278" width="196" height="40" rx="12" class="n"/><text x="102" y="303" class="t h" text-anchor="middle">Mobile apps</text><path d="M200 298 L238 298" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="278" width="156" height="40" rx="12" class="n ac"/><text x="318" y="295" class="t h" text-anchor="middle">Nomad</text><text x="318" y="309" class="t s xs" text-anchor="middle">+ Specter for backend API</text><rect x="4" y="328" width="196" height="40" rx="12" class="n"/><text x="102" y="353" class="t h" text-anchor="middle">Salesforce Exp. Cloud</text><path d="M200 348 L238 348" class="a" marker-end="url(#ah-targets)"/><rect x="240" y="328" width="156" height="40" rx="12" class="n ac"/><text x="318" y="353" class="t h" text-anchor="middle">Specter</text><text x="200" y="390" class="t s" text-anchor="middle">HUGINN recon runs first for every row</text></svg></figure>
+    <div class="grid g4">
+      <div class="card rv"><h4>APIs and web apps</h4><p>REST, GraphQL and gRPC services, plus server-rendered apps with sessions and forms.</p></div>
+      <div class="card rv"><h4>LLM, RAG and agents</h4><p>Chatbots, retrieval apps, tool-using and multi-agent systems.</p></div>
+      <div class="card rv"><h4>MCP servers</h4><p>Enumeration, tool poisoning, cross-server shadowing and rug-pull diffing, with an opt-in schema-driven fuzzer.</p></div>
+      <div class="card rv"><h4>Networks and AD</h4><p>Hosts, CIDR ranges, services, and Active Directory domains.</p></div>
+      <div class="card rv"><h4>Cloud</h4><p>AWS, Azure and GCP accounts, buckets, serverless functions, Kubernetes and container registries.</p></div>
+      <div class="card rv"><h4>Mobile</h4><p>Android and iOS apps, plus the backend they talk to.</p></div>
+      <div class="card rv"><h4>Salesforce Experience Cloud</h4><p>Methodology, playbooks and a read-only guest-access mapper for Experience Cloud sites.</p></div>
+      <div class="card rv"><h4>Full-stack products</h4><p>Infrastructure, application, AI and cloud layers together, with cross-domain chains in the final report.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="toolkit">
+  <div class="wrap">
+    <div class="eyebrow">The toolkit</div>
+    <h2>Built for the unglamorous parts.</h2>
+    <p class="lede">The repo is the generic toolkit. Everything about a target lives in a per-engagement directory outside it.</p>
+    <figure class="dgfig narrowfig"><svg class="dg dg-panel" viewBox="0 0 400 338" role="img" aria-labelledby="t-dir d-dir" xmlns="http://www.w3.org/2000/svg"><title id="t-dir">Engagement directory</title><desc id="d-dir">The per-engagement directory: intake and rules files, shared state files, append-only decision and activity trails, and findings, evidence and reports output.</desc><defs><marker id="ah-dir" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#00E5FF"/></marker></defs><rect x="4" y="4" width="392" height="30" rx="10" class="n st"/><text x="200" y="24" class="t h" text-anchor="middle">$GRIMNIR_WORKSPACE/project/</text><text x="8" y="60" class="t l" text-anchor="start">INTAKE AND RULES</text><rect x="4" y="68" width="84" height="28" rx="14" class="chip"/><text x="46" y="87" class="t s" text-anchor="middle">project.md</text><rect x="96.0" y="68" width="71" height="28" rx="14" class="chip"/><text x="131" y="87" class="t s" text-anchor="middle">scope.md</text><rect x="174.8" y="68" width="130" height="28" rx="14" class="chip"/><text x="240" y="87" class="t s" text-anchor="middle">classification.md</text><rect x="313.0" y="68" width="71" height="28" rx="14" class="chip"/><text x="348" y="87" class="t s" text-anchor="middle">roe.json</text><text x="8" y="124" class="t l" text-anchor="start">SHARED STATE</text><rect x="4" y="132" width="84" height="28" rx="14" class="chip"/><text x="46" y="151" class="t s" text-anchor="middle">state.json</text><rect x="96.0" y="132" width="110" height="28" rx="14" class="chip"/><text x="151" y="151" class="t s" text-anchor="middle">asset-map.json</text><rect x="214.39999999999998" y="132" width="91" height="28" rx="14" class="chip"/><text x="260" y="151" class="t s" text-anchor="middle">intel.jsonl</text><rect x="4" y="166" width="91" height="28" rx="14" class="chip"/><text x="49" y="185" class="t s" text-anchor="middle">params.json</text><text x="8" y="222" class="t l" text-anchor="start">APPEND-ONLY TRAIL</text><rect x="4" y="230" width="117" height="28" rx="14" class="chip"/><text x="62" y="249" class="t s" text-anchor="middle">decisions.jsonl</text><rect x="129.0" y="230" width="110" height="28" rx="14" class="chip"/><text x="184" y="249" class="t s" text-anchor="middle">activity.jsonl</text><text x="8" y="286" class="t l" text-anchor="start">OUTPUT</text><rect x="4" y="294" width="117" height="28" rx="14" class="chip"/><text x="62" y="313" class="t s" text-anchor="middle">agent/findings/</text><rect x="129.0" y="294" width="77" height="28" rx="14" class="chip"/><text x="168" y="313" class="t s" text-anchor="middle">evidence/</text><rect x="214.4" y="294" width="71" height="28" rx="14" class="chip"/><text x="250" y="313" class="t s" text-anchor="middle">reports/</text><rect x="293.2" y="294" width="77" height="28" rx="14" class="chip"/><text x="332" y="313" class="t s" text-anchor="middle">report.md</text></svg><figcaption>The per-engagement directory is the shared contract. <a class="plasma" href="architecture.html#directory">Details</a></figcaption></figure>
+    <div class="grid g3">
+      <div class="card rv"><h3>Playbook engine</h3><p>Ships with cross-tenant BOLA, mass assignment, missing-auth replay, in-band SQL injection, reflected XSS and a Salesforce pack. Matching is reachability-aware and described by a JSON schema.</p></div>
+      <div class="card rv"><h3>Rules of engagement</h3><p>Per-program rate, daily budget, required headers, quiet hours, scanning and AI-tool bans, enforced by a script, with egress routed through the program's proxy.</p></div>
+      <div class="card rv"><h3>Scope and sessions</h3><p>Scope checks before active testing, and session handling that keeps you authenticated as your own test accounts.</p></div>
+      <div class="card rv"><h3>Caido integration</h3><p>Query HTTP history, replay an organic authenticated request with its auth intact, and export a PoC, all visible in Caido's UI.</p></div>
+      <div class="card rv"><h3>SARIF export</h3><p>Emit gate-passing findings as SARIF 2.1.0 or a merged JSON bundle for external vulnerability managers.</p></div>
+      <div class="card rv"><h3>MCP testing toolkit</h3><p>Enumerate, probe and call MCP tools, scan for poisoning and shadowing, diff for rug pulls, and confirm with the MCP harness primitive.</p></div>
+      <div class="card rv"><h3>Shared hunting rules</h3><p>Every agent reads the same rules at startup, and a never-submit list of findings that should not be filed, each written from a measured failure.</p></div>
+      <div class="card rv"><h3>Intel and decision trail</h3><p>An append-only intel feed, activity ledger and decision log make a run readable and reviewable after the fact.</p></div>
+      <div class="card rv"><h3>Credential intake</h3><p>Turn freeform credential notes into a structured per-engagement vault.</p></div>
+    </div>
+    <h3 style="margin-top:56px">Frameworks covered</h3>
+    <div class="tablewrap">
+    <table>
+      <tr><th>Framework</th><th>Agent</th></tr>
+      <tr><td>PTES, MITRE ATT&amp;CK</td><td>Hunter</td></tr>
+      <tr><td>OWASP API Top 10 (2023), WSTG v5.0</td><td>Specter</td></tr>
+      <tr><td>OWASP LLM Top 10, Agentic Top 10, MCP Top 10, MITRE ATLAS</td><td>ARTEMIS</td></tr>
+      <tr><td>MITRE ATT&amp;CK Cloud, CIS Benchmarks</td><td>Nimbus</td></tr>
+      <tr><td>OWASP MASVS / MASTG</td><td>Nomad</td></tr>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="usecases">
+  <div class="wrap">
+    <div class="eyebrow">Who it is for</div>
+    <h2>One toolkit, several kinds of operator.</h2>
+    <div class="grid g2" style="margin-top:32px">
+      <div class="card rv"><h3>Bug bounty hunters</h3><p>Stay inside program rules, spend effort where it is reachable, and file reports a triager can replay.</p></div>
+      <div class="card rv"><h3>Pentest consultancies</h3><p>Scope, delegate, track coverage against a denominator, and deliver one unified report with cross-domain chains.</p></div>
+      <div class="card rv"><h3>AppSec teams</h3><p>Test your own apps and APIs with the same evidence discipline, and export confirmed findings as SARIF.</p></div>
+      <div class="card rv"><h3>AI and MCP security</h3><p>Dedicated methodology for LLM apps, agents and MCP servers, from prompt injection to tool-call authorization.</p></div>
+    </div>
+    <h3 style="margin-top:56px">Train on the labs</h3>
+    <p class="dim">Four walkthroughs drive Grimnir from <code>/engage</code> to a confirmed finding against deliberately vulnerable apps. Run them on the same isolated host as Grimnir.</p>
+    <div class="grid g4">
+      <a class="card rv" href="https://github.com/DoctorGoz/grimnir/blob/main/labs/crapi.md" target="_blank" rel="noopener"><h4>OWASP crAPI</h4><p>BOLA, mass assignment, missing-auth replay.</p></a>
+      <a class="card rv" href="https://github.com/DoctorGoz/grimnir/blob/main/labs/juice-shop.md" target="_blank" rel="noopener"><h4>Juice Shop</h4><p>SQL injection and reflected XSS.</p></a>
+      <a class="card rv" href="https://github.com/DoctorGoz/grimnir/blob/main/labs/dvga.md" target="_blank" rel="noopener"><h4>DVGA</h4><p>GraphQL introspection and authorization.</p></a>
+      <a class="card rv" href="https://github.com/DoctorGoz/grimnir/blob/main/labs/mcp.md" target="_blank" rel="noopener"><h4>Vulnerable MCP server</h4><p>Tool poisoning, shadowing, tool-call authz.</p></a>
+    </div>
+  </div>
+</section>
+
+<section id="platforms">
+  <div class="wrap">
+    <div class="eyebrow">Platforms</div>
+    <h2>Runs where the agents run.</h2>
+    <p class="lede">Grimnir is prompt and methodology definitions plus scripts, so it follows the harness you run it in.</p>
+    <div class="grid g2">
+      <div class="card rv"><span class="tag">PRIMARY</span><h3>Claude Code</h3><p>Clone the repo and launch Claude Code. You get the orchestrator and all six agents immediately.</p></div>
+      <div class="card rv"><span class="tag">SUPPORTED</span><h3>OpenCode via grimnir-oc</h3><p>The grimnir-oc build targets OpenCode, which can run other model providers. <a class="plasma" href="https://github.com/DoctorGoz/grimnir-oc" target="_blank" rel="noopener">View grimnir-oc</a></p></div>
+    </div>
+    <p class="dim" style="margin-top:24px">More harnesses and providers are expected over time, and Grimnir is meant to get more capable as the models underneath it improve. No specifics are promised yet.</p>
+  </div>
+</section>
+
+<section class="band" id="start">
+  <div class="wrap">
+    <div class="eyebrow">Get started</div>
+    <h2>Clone, then <span class="plasma">claude</span>.</h2>
+    <div class="warn"><strong>Run this on a machine you are willing to lose.</strong> The tracked settings grant the agent an allow-list broad enough to run code without prompting, and a pentest orchestrator ingests attacker-controlled input by design. Use a dedicated VM, container or disposable VPS. Read <a class="plasma" href="https://github.com/DoctorGoz/grimnir/blob/main/SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a> first.</div>
+<pre><span class="c"># Tier 0: zero install</span>
+git clone https://github.com/DoctorGoz/grimnir.git ~/workspace/grimnir
+cd ~/workspace/grimnir &amp;&amp; claude
+
+<span class="c"># then, inside Claude Code</span>
+/engage acme-corp
+/recon acme-corp</pre>
+    <p class="dim">Tier 0 gives you the orchestrator, all six agents, the intel feed, structured findings, the validation gate and the stdlib confirmation primitives. When you want the external toolchains, <code>setup/setup.sh</code> offers lite, standard and full profiles. The README covers each tier.</p>
+    <div class="cta">
+      <a class="btn lg" href="https://github.com/DoctorGoz/grimnir#install" target="_blank" rel="noopener">Install tiers</a>
+      <a class="btn lg ghost" href="https://github.com/DoctorGoz/grimnir/blob/main/labs/README.md" target="_blank" rel="noopener">Try a lab</a>
+    </div>
+  </div>
+</section>
+
+<section id="responsible">
+  <div class="wrap">
+    <div class="eyebrow">Responsible use</div>
+    <h2>Only test what you are authorized to test.</h2>
+    <p class="lede">Grimnir is built for authorized security testing, bug bounty and research. Scope and authorization are confirmed before any active testing, and you need written authorization for every system you point it at. The labs run on your own host for exactly that reason.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div><div class="brand" style="margin-bottom:12px">GRIMNIR<span class="plasma">.</span></div><p class="dim" style="max-width:360px">Governed reconnaissance, intelligence management, network inspection and reporting. MIT licensed.</p></div>
+      <div><h5>Project</h5>
+        <a href="https://github.com/DoctorGoz/grimnir" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/DoctorGoz/grimnir-oc" target="_blank" rel="noopener">grimnir-oc</a>
+        <a href="https://github.com/DoctorGoz/grimnir/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></div>
+      <div><h5>Docs</h5>
+        <a href="architecture.html">Architecture</a>
+        <a href="https://github.com/DoctorGoz/grimnir/blob/main/ARCHITECTURE.md" target="_blank" rel="noopener">ARCHITECTURE.md</a>
+        <a href="https://github.com/DoctorGoz/grimnir/blob/main/labs/README.md" target="_blank" rel="noopener">Labs</a>
+        <a href="https://github.com/DoctorGoz/grimnir/blob/main/SECURITY.md" target="_blank" rel="noopener">Security model</a>
+        <a href="https://github.com/DoctorGoz/grimnir/blob/main/LICENSE" target="_blank" rel="noopener">License</a></div>
+    </div>
+    <div class="fine">This site is static and loads nothing from third parties.</div>
+  </div>
+</footer>
+
+</body>
+</html>
