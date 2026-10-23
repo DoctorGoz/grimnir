@@ -1,0 +1,72 @@
+id: sqli-inband
+version: "1"
+name: SQL injection in a query parameter (error and boolean, in-band)
+domain: web
+lead_agent: specter
+tags: [sqli, injection, sql, database, wstg-inpv-05, cwe-89]
+description: >
+  A parameter concatenated into a SQL statement lets the caller change the query. Proven in-band
+  with a handful of read-only GETs and no scanner: a quote that raises a database error the doubled
+  quote clears, or a TRUE condition that keeps the baseline while FALSE and a misspelled-keyword
+  control change it, twice with fresh literals. Conditions are ANDed onto the existing predicate, so
+  nothing reads more rows than the original request or writes anything. Value is the data the
+  injection reaches, and showing it stays with the operator.
+prerequisites:
+  signals_any: [reflected-param, sql_error, sqli, database, search, filter, sort]
+  tech_any: [php, mysql, mariadb, postgres, mssql, oracle, sqlite, asp.net, classic asp, coldfusion,
+             wordpress, joomla, drupal, laravel, django, rails, express]
+reachability:
+  gates: []
+  note: >
+    Unauthenticated by default: lanes come from parameters params.py probe saw answer without a
+    server error. An authed variant reuses the session header on the same parameter.
+chain:
+  - id: map_params
+    capability: recon
+    agent: huginn
+    action: >
+      Run params.py inventory, then params.py probe, so every GET query parameter has a baseline
+      status, and those that changed the response are marked. Reflection is not needed for SQLi.
+  - id: detect_inband
+    next_on: {confirmed: prove_data_reach, candidate: time_based}
+    capability: injection
+    agent: specter
+    action_class: read-only
+    action: >
+      Fetch the baseline twice for its noise floor. Append a single quote and a double quote,
+      reading database error text against the baseline; on an error, the doubled quote must clear it.
+      Then append TRUE and FALSE conditions in numeric, string-literal, and LIKE-pattern form, with a
+      misspelled TRUE as the control and a second round with fresh literals.
+    confirm: sqli-confirm.py
+    confirm_args: >-
+      --method GET --url '{EXAMPLE_URL}' --param '{PARAM}'
+    evidence_class: sqli
+  - id: time_based
+    capability: injection
+    agent: specter
+    action: >
+      Human only, for a parameter with no error and no boolean signal but a strong reason to
+      suspect a query (a sort or filter that visibly reaches the database). One sleep-based pair
+      (a short delay against no delay), repeated, at the program's rate limit. Never a heavy query.
+    optional: true
+  - id: prove_data_reach
+    capability: data_exfil
+    agent: specter
+    action: >
+      Operator-approved only. Show impact with the smallest read that a triager accepts: the
+      database version and current user, or the count of rows in a table the caller shouldn't see.
+      Never dump user data, never write, and never run a scanner the program bans.
+    optional: true
+blockers:
+  - the endpoint returns a server error at baseline, so no response is readable
+  - every quote and condition is blocked by a filter before it reaches the query
+  - the page changes on its own and no database error appears
+never_submit:
+  - a database error message alone, with no quote-balance pair or boolean proof (that is information disclosure)
+  - a boolean differential whose misspelled control also matched the baseline
+  - an injection reported at Critical without the operator-approved data-reach step
+severity_ceiling: critical
+references:
+  - OWASP WSTG-INPV-05 (testing for SQL injection)
+  - CWE-89 (improper neutralization of special elements used in an SQL command)
+  - hunting Rule 3 (negative control required)

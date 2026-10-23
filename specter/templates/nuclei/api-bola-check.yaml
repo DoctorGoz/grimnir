@@ -1,0 +1,21 @@
+id: api-bola-check
+info:
+  name: API BOLA/IDOR Check
+  author: specter-agent
+  severity: high
+  tags: api,bola,idor,owasp-api1
+http:
+  - raw:
+      - |
+        GET /api/v1/users/{{user_id}} HTTP/1.1
+        Host: {{Hostname}}
+        Authorization: Bearer {{token}}
+    payloads:
+      user_id: ["1","2","100","999","admin"]
+    matchers:
+      - type: status
+        status: [200]
+      - type: word
+        part: body
+        words: ["email","username"]
+        condition: or

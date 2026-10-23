@@ -1,0 +1,19 @@
+# Grimnir operator-local hygiene patterns — TEMPLATE (ships clean; safe to track).
+#
+# Copy to  ~/.grimnir/hygiene-patterns.txt  (or point $GRIMNIR_HYGIENE_PATTERNS at
+# it) and fill in YOUR identifiers. scripts/check-repo-hygiene.sh loads this list
+# to catch operator-specific leakage the generic patterns deliberately don't —
+# your hosts, IPs, email, and real program/client names.
+#
+# Keep the REAL file private (chmod 600); NEVER commit it. It lives outside the
+# repo by default (~/.grimnir/), so there is nothing to gitignore.
+#
+# Format: one case-insensitive extended-regex (ERE) per line. Blank lines and
+# lines beginning with # are ignored. Escape dots in literal IPs/emails (1\.2\.3\.4).
+#
+# ── Examples (replace with your own, then delete these) ──
+# you@example\.com                       # operator email
+# \b(host-a|host-b|host-c)\b             # your machine / VPS hostnames
+# 203\.0\.113\.7                         # your home / office public IP
+# 100\.64\.12\.34                        # your EXACT Tailscale (tailnet) IP
+# \bAcmeCorp\b                           # a real client / program name (per engagement)

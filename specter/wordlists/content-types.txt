@@ -1,0 +1,23 @@
+application/json
+application/xml
+application/x-www-form-urlencoded
+text/plain
+text/xml
+text/html
+multipart/form-data
+application/json;charset=utf-8
+application/json;charset=utf-7
+application/json; charset=utf-16
+application/vnd.api+json
+application/hal+json
+application/json-patch+json
+application/merge-patch+json
+application/csp-report
+application/xhtml+xml
+application/soap+xml
+application/graphql
+application/x-json
+text/json
+text/x-json
+application/jsonrequest
+application/x-www-json

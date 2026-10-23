@@ -1,0 +1,19 @@
+id: graphql-introspection
+info:
+  name: GraphQL Introspection Enabled
+  author: specter-agent
+  severity: medium
+  tags: api,graphql,introspection
+http:
+  - raw:
+      - |
+        POST {{BaseURL}} HTTP/1.1
+        Host: {{Hostname}}
+        Content-Type: application/json
+
+        {"query":"{__schema{types{name,fields{name}}}}"}
+    matchers:
+      - type: word
+        part: body
+        words: ["__schema","fields"]
+        condition: and

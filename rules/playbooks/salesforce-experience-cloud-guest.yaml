@@ -1,0 +1,139 @@
+id: salesforce-experience-cloud-guest
+version: "2"
+name: Salesforce Experience Cloud unauthenticated guest data access
+domain: web
+lead_agent: specter
+tags: [salesforce, lightning, experience-cloud, community, aura, sfsites, guest-user, authz, idor, data-exposure, ols-fls-rls]
+description: >
+  A Salesforce Experience Cloud (formerly Community) site serves a Lightning app to the anonymous
+  Guest User over one endpoint (POST /s/sfsites/aura, aura.token=undefined). Whatever the Guest User
+  profile + guest sharing rules expose is reachable with no login: the accessible object catalog, object
+  rows, individual records, guest-invocable Apex, and files. This is a CONFIGURATION-exposure class, not
+  a Salesforce 0day: a hardened org returns SUCCESS-but-empty for standard objects and denies every
+  record, and the lane caps at Low. The high-value target is a sensitive CUSTOM object or field hidden
+  from the UI but still readable programmatically (Password_Hash__c, TOTP_Secret__c, Secrets__c-style).
+  Prove exposure by retrieving the MINIMUM data that shows it (harm check); treat public help-center
+  content (Knowledge articles, Topics, hero/logo images) as working-as-designed, never as a leak.
+prerequisites:
+  signals_any: [salesforce, aura, sfsites, lightning-community, experience-cloud, force-com, visualforce, siteforce, webruntime, my-site-com]
+  tech_any: [salesforce, lightning, experience-cloud, force.com, visualforce, sfdc, siteforce, my.site.com]
+  auth: none — the entire lane is the unauthenticated Guest User surface. A login is not needed and does
+        not help; a second account is irrelevant.
+reachability:
+  gates: []
+  note: >
+    Fully reachable with no operator gate (unauth guest). SEVERITY is gated by the target's guest sharing
+    config, which you cannot see up front: a hardened org returns 0 rows for every standard object and
+    denies every record read (caps at Low/Info); a misconfigured guest profile leaks customer PII, a
+    hidden sensitive custom field, or a without-sharing Apex method (High/Critical). Reachability is
+    REACHABLE; the realistic ceiling is unknown until the object catalog comes back.
+chain:
+  - id: detect_community
+    capability: recon
+    agent: specter
+    action: >
+      Fingerprint an Experience Cloud site: paths /s/, /s/topic, /s/article, /s/contactsupport; domains
+      *.force.com / *.secure.force.com / *.live.siteforce.com / *.my.site.com; the aura endpoint answers
+      at one of /s/sfsites/aura, /aura, /sfsites/aura; response indicators "actions":[, aura:clientOutOfSync,
+      aura:invalidSession. Extract the live aura.context from the /s/ page bootstrap: pull the app.js URL,
+      url-decode the fwuid and the loaded siteforce:communityApp appId. Those two + aura.token=undefined
+      are all a guest POST needs. Guest token may be the literal string "undefined" or "null" with no sid
+      cookie. Re-extract fwuid/appId if actions start returning framework/clientOutOfSync errors.
+  - id: discover_objects
+    capability: recon
+    agent: specter
+    action: >
+      Enumerate the object catalog instead of guessing. POST
+      serviceComponent://ui.force.components.controllers.hostConfig.HostConfigController/ACTION$getConfigData
+      and read apiNamesToKeyPrefixes — every object the guest can see plus its 3-char key prefix; __c
+      suffix marks custom objects (the interesting ones). OneController/ACTION$getCurrentApp gives an
+      extended listing. For any object, aura://RecordUiController/ACTION$getObjectInfo (ObjectApiName param)
+      returns its field map for FLS review. This catalog drives every later step.
+    evidence_class: authz
+  - id: enumerate_records
+    capability: recon
+    agent: specter
+    action: >
+      For each catalog object, POST SelectableListDataProviderController/ACTION$getItems
+      (params entityNameOrId, layoutType:"FULL", pageSize up to 1000, currentPage, getCount:true) and read
+      the row count; ScopedResultsDataProviderController/ACTION$getLookupItems (scope + term of 4+ chars)
+      is a search-based enumerator. NEGATIVE CONTROL FIRST: getItems returns SUCCESS-empty for garbage
+      object names too, so it is NOT an existence oracle — a non-zero count on a business object is the
+      only signal, and SUCCESS-with-0-rows on Account/Contact/Case is guest sharing working as designed.
+      Heuristic: a response under ~12KB usually means access-denied or own-record-only.
+    evidence_class: authz
+  - id: read_records
+    capability: authz_bypass
+    agent: specter
+    action: >
+      For ids surfaced above (and ids in metadata like OwnerId/LastModifiedById), read the record:
+      DetailController/ACTION$getRecord (recordId, layoutType:"FULL"), RecordGvpController/ACTION$getRecord,
+      or aura://RecordUiController/ACTION$getRecordWithFields (fields list). getRecordWithFields is UI-API
+      sharing-safe and denies unreachable records with "The requested resource does not exist"; a record
+      that RETURNS fields the guest should not see (another user's or a customer's PII) is the finding.
+      Retrieve the minimum fields that prove exposure.
+    confirm: authz-confirm.py
+    evidence_class: authz
+  - id: hidden_sensitive_fields
+    capability: data_exfil
+    agent: specter
+    action: >
+      Highest-value lane: sensitive CUSTOM objects/fields hidden from the UI but still readable
+      programmatically. From the getConfigData catalog, pull __c objects and getObjectInfo field maps,
+      then getItems/getRecord any field named like a secret (Password_Hash__c, TOTP_Secret__c, Api_Key__c,
+      Secret__c, SSN__c, token/credential fields). A guest-readable credential or PII field is High/Critical.
+    confirm: authz-confirm.py
+    evidence_class: authz
+    optional: true
+  - id: custom_apex
+    capability: authz_bypass
+    agent: specter
+    action: >
+      Discover guest-invocable @AuraEnabled Apex — there is NO enumeration oracle (real/fake class names
+      both return "No apex action available"), so harvest real names: search proxy history for apex%3a%2f%2f
+      (url-encoded apex://), search responses for compound://c to read componentDefs .ac entries (method n,
+      descriptor, return type rt, params pa), or pull full signatures from
+      /auraCmpDef?aura.app=markup://siteforce:communityApp&...&_def=markup://c:[COMPONENT]. Invoke via
+      aura://ApexActionController/ACTION$execute (namespace/classname/method/params) or the LWC path
+      /webruntime/api/apex/execute. A method declared "without sharing" that reads/DMLs past the guest
+      profile is the high-impact path. If ApexClass is guest-readable, getItems ApexClass and read Body to
+      audit source directly.
+    confirm: authz-confirm.py
+    evidence_class: authz
+    optional: true
+  - id: file_download
+    capability: data_exfil
+    agent: specter
+    action: >
+      For file ids from the catalog, download as guest by object type and key prefix: Document (prefix 015)
+      GET /servlet/servlet.FileDownload?file=<Id>; ContentDocument (069)
+      GET /sfc/servlet.shepherd/document/download/<Id>; ContentVersion (068)
+      GET /sfc/servlet.shepherd/version/download/<Id>. Distinguish real exposure from WAD: public site
+      images/logos are WAD; an integration/config export or a customer document is the finding. Many
+      "config" blobs (managed-package license tokens, Salesforce pod names) are org-bound or encrypted and
+      are not usable credentials — do not overclaim them.
+    evidence_class: authz
+    optional: true
+blockers:
+  - Guest sharing correctly locked — standard objects return SUCCESS with 0 rows; caps the lane
+  - Secure Guest User Record Access (default since Winter 21) strips guest from most sharing paths; View/Modify All Data, Edit, Delete disabled for guest
+  - getItems is not an existence oracle (garbage names also return SUCCESS-empty) — no blind custom-object enum; use getConfigData for the real catalog
+  - getRecordWithFields is UI-API sharing-safe — denies unreachable records with "resource does not exist"
+  - ApexActionController has no enumeration oracle — you need real class names from client JS / auraCmpDef
+  - API-enabled may be off for the guest profile, killing the aura data controllers entirely
+  - a transient 500/clientOutOfSync mid-sweep is rate-limit/framework-rebuild, not a block — cool down or re-extract fwuid and re-probe
+never_submit:
+  - SUCCESS-with-0-rows on a standard object is guest sharing working as designed, not a finding
+  - public help-center content (Knowledge articles, Topics, hero/logo images, the site Network config) is WAD
+  - a list/records call that returns only the guest's own site-user profile is WAD, not a User-object leak
+  - config/integration files that contain only org-bound or encrypted license blobs and Salesforce pod names are not credentials
+  - reflected object/field names with no returned rows/records is enumeration noise, not exposure
+severity_ceiling: critical
+references:
+  - methodology doc specter/docs/salesforce-experience-cloud.md (read-only mapper specter/scripts/sf-guest-map.py)
+  - WSTG-ATHZ (authorization) and CWE-284 / CWE-639 (improper access control / IDOR)
+  - Salesforce three-layer model — Object (OLS), Field (FLS), Record (RLS) level security
+  - Salesforce Secure Guest User Record Access and guest-user sharing-rule hardening (Winter 21+)
+  - tooling — prjblk/aura-dump (object/field/apex dumper), moniik/poc_salesforce_lightning (the 2021 PoC)
+  - hunting rules — harm check (minimum data), negative control before claiming an oracle
+  - the aura guest surface is a config-exposure class, not a Salesforce platform 0day

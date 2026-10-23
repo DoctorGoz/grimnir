@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Grimnir pre-commit hook — block commits that introduce operator-specific leakage.
+# Scans the staged diff's ADDED lines via scripts/check-repo-hygiene.sh (which also
+# loads your private list from ~/.grimnir/hygiene-patterns.txt).
+#
+# Git hooks are NOT tracked, so install this once per clone (operator-local):
+#   ln -sf "$(git rev-parse --show-toplevel)/scripts/git-hooks/pre-commit" \
+#          "$(git rev-parse --git-dir)/hooks/pre-commit"
+exec "$(git rev-parse --show-toplevel)/scripts/check-repo-hygiene.sh"

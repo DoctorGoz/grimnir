@@ -1,0 +1,14 @@
+public
+private
+community
+snmp
+monitor
+admin
+default
+read
+write
+internal
+secret
+cisco
+router
+switch

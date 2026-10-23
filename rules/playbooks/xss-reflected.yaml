@@ -1,0 +1,71 @@
+id: xss-reflected
+version: "1"
+name: Reflected cross-site scripting through a query parameter
+domain: web
+lead_agent: specter
+tags: [xss, reflected, injection, browser, wstg-inpv-01, cwe-79]
+description: >
+  A query parameter written into an HTML response without the encoding its context needs lets a
+  crafted link run script in the target's origin. Found from the reflection map (the context and
+  which breaker characters came back raw) and proven only by execution: a headless browser loads
+  the payload URL, fetching nothing but the main document, and the payload must set a random number
+  the page couldn't set itself. Value is what that origin lets script reach: a logged-in,
+  state-changing origin pays; a static brochure page with nothing to steal rarely does.
+prerequisites:
+  signals_any: [xss-candidate, reflected-html-text, reflected-attr-dq, reflected-attr-sq,
+                reflected-attr-unquoted, reflected-script, reflected-comment]
+  tech_any: []
+reachability:
+  gates: []
+  note: >
+    Unauthenticated by default. A reflection that only appears logged in needs the session header
+    on the lane; the victim then has to be logged in too, which the report must say.
+chain:
+  - id: map_reflection
+    capability: recon
+    agent: huginn
+    action: >
+      Run params.py inventory, then params.py probe. A parameter is XSS-shaped when it is reflected
+      in an HTML context with that context's characters raw (< in text, the quote in an attribute,
+      a quote or </script> in a script block).
+  - id: execute_reflected
+    next_on: {confirmed: prove_impact, candidate: bypass_review}
+    capability: xss
+    agent: specter
+    action_class: read-only
+    action: >
+      Re-map the reflection with a breaker canary, pick the payload the context allows (break out of
+      the tag, an autofocus handler, or a script-string breakout), and load it in headless Chromium
+      with every request but the main document aborted. Execution is read back as this run's number.
+    confirm: xss-confirm.py
+    confirm_args: >-
+      --method GET --url '{EXAMPLE_URL}' --param '{PARAM}'
+    evidence_class: xss
+  - id: bypass_review
+    capability: xss
+    agent: specter
+    action: >
+      For an xss-likely verdict (the payload came back intact but didn't run): read the CSP for an
+      allowed source or a nonce leak, check whether a click or a focusable element is all it needs,
+      and confirm by hand with render-confirm.py. Don't chase a CSP with no bypass.
+    optional: true
+  - id: prove_impact
+    capability: impact
+    agent: specter
+    action: >
+      Operator-approved only, on the operator's own account: show what the origin exposes to script
+      (a non-HttpOnly session cookie, an API token in page state, or a state-changing request made
+      as the user). Never against another user.
+    optional: true
+blockers:
+  - the response is not HTML (JSON or plain text served with its real content type)
+  - every character the context needs comes back encoded
+never_submit:
+  - self-XSS (the payload only reaches the person who typed it, with no link or CSRF to deliver it)
+  - reflection with the context's characters encoded, reported without execution
+  - XSS on a sandboxed or static origin that holds no session and no data (no impact)
+severity_ceiling: high
+references:
+  - OWASP WSTG-INPV-01 (testing for reflected cross-site scripting)
+  - CWE-79 (improper neutralization of input during web page generation)
+  - rules/never-submit.md (self-XSS)

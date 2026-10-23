@@ -1,0 +1,158 @@
+# ssrf-internal-services.txt — what to look for once the request lands inside
+#
+# Used by: ssrf-gopher-internal-rce, ssrf-fetch-by-url, webhook-ssrf-deblind.
+#
+# Two tables. The first is the port sweep: which listeners are worth identifying. The second is
+# the chain catalogue: what a confirmed listener is actually worth, and by which mechanism.
+#
+# DISCIPLINE (hunting Rule 13). Every chain below has a non-destructive form — a version banner, a
+# stats or info command, a read-only status page, or an outbound callback issued BY the service.
+# Use that form for the proof. State-changing chains are documented so you can describe impact
+# accurately in the report, not so you can run them on production.
+#
+# CANARY = the operator OOB listener URL. Substitute before use.
+
+## ============ 1. PORT SWEEP ============
+# HTTP-speaking, generally readable with a plain http:// primitive
+80      http            generic
+443     https           generic
+8080    http-alt        admin panels, Tomcat, Jenkins, proxies
+8443    https-alt       admin panels
+8000    http-alt        dev servers, Django, Flask
+8888    http-alt        Jupyter, Druid, Weblogic
+3000    http-alt        Node, Grafana, Rails
+5000    http-alt        Flask, registry
+9000    php-fpm         FastCGI (raw-socket scheme required)
+9090    http-alt        Prometheus, openshift console
+9200    http            Elasticsearch
+9300    transport       Elasticsearch cluster
+5601    http            Kibana
+8500    http            Consul agent/UI
+8501    https           Consul
+2379    http            etcd client API
+2380    http            etcd peer
+10250   https           kubelet read/exec API
+10255   http            kubelet read-only (legacy)
+6443    https           Kubernetes API server
+2375    http            Docker daemon, unauthenticated
+2376    https           Docker daemon, TLS
+4243    http            Docker daemon, legacy
+15672   http            RabbitMQ management
+8161    http            ActiveMQ console
+7001    http            Weblogic
+4242    http            OpenTSDB
+8983    http            Solr
+9121    http            Redis exporter
+9187    http            Postgres exporter
+5984    http            CouchDB
+7474    http            Neo4j
+8086    http            InfluxDB
+3128    http            Squid proxy
+1080    socks           SOCKS proxy
+
+# Raw-protocol, requires gopher:// or dict:// to speak properly
+6379    redis           very high value, often unauthenticated on loopback
+11211   memcached       often unauthenticated
+3306    mysql           gopher-speakable handshake
+5432    postgres        gopher-speakable handshake
+27017   mongodb         often unauthenticated on loopback
+25      smtp            outbound mail from the target's identity
+465     smtps           smtp
+587     submission      smtp
+389     ldap            directory enumeration, CRLF-injectable
+636     ldaps           ldap
+53      dns             internal resolver, AXFR zone transfer
+22      ssh             banner only; a banner still proves reach
+23      telnet          banner only
+1099    rmi-registry    Java RMI, deserialization surface
+4444    rmi-alt         Java RMI
+9999    rmi-alt         Java RMI
+10050   zabbix-agent    remote command execution when enabled
+5672    amqp            RabbitMQ wire protocol
+
+## ============ 2. CHAIN CATALOGUE ============
+# format: SERVICE | PROOF (non-destructive) | IMPACT CEILING | mechanism note
+
+Redis
+  PROOF   : gopher:// or dict:// INFO — the version banner comes back or the callback fires
+  IMPACT  : RCE
+  MECHANISM: CONFIG SET of the persistence directory and filename, a key holding the payload,
+             then a save. Lands a file at a path of your choosing — a web root, a cron directory,
+             an authorized_keys file. Do NOT run on production; the proof is the INFO response.
+
+Memcached
+  PROOF   : dict:// stats, or gopher:// stats — returns the item and connection counters
+  IMPACT  : RCE where the application deserializes cached objects
+  MECHANISM: poison a cache key with a serialized object the app will deserialize on read.
+
+FastCGI (php-fpm)
+  PROOF   : a gopher-framed record that produces a distinguishable FastCGI error
+  IMPACT  : RCE
+  MECHANISM: PHP_VALUE directives in the parameter block set auto_prepend_file to the request
+             body stream. Requires the absolute path of any real PHP file on the host.
+
+Java RMI
+  PROOF   : registry enumeration — bound names come back
+  IMPACT  : RCE
+  MECHANISM: a serialized gadget chain written to the registry port over a raw-socket scheme.
+
+Docker daemon
+  PROOF   : GET the containers list or the version endpoint over plain http://
+  IMPACT  : RCE and host compromise
+  MECHANISM: create a container with the host filesystem bind-mounted and start it. Destructive
+             by nature — read-only enumeration is the proof, full stop.
+
+Kubelet / Kubernetes API
+  PROOF   : the read-only pods listing, or an unauthenticated API server version response
+  IMPACT  : cluster compromise
+  MECHANISM: exec into a pod through the kubelet API where anonymous auth is enabled.
+
+etcd
+  PROOF   : the version endpoint
+  IMPACT  : cluster credential disclosure
+  MECHANISM: a recursive key listing returns service account tokens and internal endpoints.
+
+Elasticsearch
+  PROOF   : the root banner, cluster health, or an index listing
+  IMPACT  : full data disclosure
+  MECHANISM: unauthenticated search across every index.
+
+Consul
+  PROOF   : the agent self endpoint
+  IMPACT  : service credential disclosure, and RCE where script checks are enabled
+  MECHANISM: register a service with a check that executes a command.
+
+Prometheus and metrics exporters
+  PROOF   : an exporter given a target parameter will connect to it and report — the connection
+            itself is the callback
+  IMPACT  : internal enumeration, and secondary SSRF
+  MECHANISM: exporters that take a target argument are themselves SSRF primitives, which makes
+             them ideal canary chains when the primary primitive is blind.
+
+SMTP
+  PROOF   : the greeting banner returned or a callback from a delivery attempt
+  IMPACT  : spoofed mail from the target's own infrastructure
+  MECHANISM: a gopher-framed SMTP conversation. Send only to an address you control.
+
+Internal DNS resolver
+  PROOF   : a resolvable query answered
+  IMPACT  : full internal namespace disclosure
+  MECHANISM: a zone transfer request framed over a raw-socket scheme returns every record.
+
+Enterprise app admin surfaces (issue trackers, wikis, CI servers, search platforms,
+application servers, dashboards)
+  PROOF   : an icon-fetch, link-preview, proxy-stream, shard or federation parameter pointed at
+            CANARY — the callback proves reach AND gives you a second-order primitive
+  IMPACT  : varies from information disclosure to RCE depending on the product and version
+  MECHANISM: these products ship URL-taking endpoints intended for internal federation. They are
+             the single best canary-chain source because they are reachable unauthenticated far
+             more often than they should be. Fingerprint the product and version first, then look
+             up its known URL-taking endpoints rather than guessing.
+
+## ============ 3. CANARY-CHAIN PRINCIPLE ============
+# When the primary primitive is blind, do not settle for a timing oracle. Find an internal service
+# that will ITSELF make an outbound request when asked, and point it at CANARY. Its callback:
+#   - proves internal reach through a channel the primary primitive never had
+#   - identifies the service and often its version
+#   - frequently returns the response body the primary primitive would not
+# This is the single highest-leverage move in the blind case (hunting Rule 32).

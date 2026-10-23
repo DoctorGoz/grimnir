@@ -1,0 +1,26 @@
+# Copy to ~/.grimnir/hygiene-allow-words.txt (or set $GRIMNIR_HYGIENE_ALLOW_WORDS).
+#
+# scripts/check-repo-hygiene.sh derives program-name patterns from the directory
+# names under your workspace ($GRIMNIR_WORKSPACE, default ~/workspace), so a new
+# engagement is covered the moment its directory exists and nobody has to
+# remember to add it. The cost of deriving is false positives: a handle that is
+# also an ordinary word, or a vendor whose name is a legitimate fingerprinting
+# category, looks identical to a leak from a regex's point of view.
+#
+# List those here, one per line, case-insensitive. Blank lines and lines
+# starting with # are ignored.
+#
+# This file is operator-local and never committed, for the same reason the
+# pattern file is: a tracked list of which words to ignore would itself be a
+# list of the programs you work on.
+#
+# CLAUDE.md permits generic vendor names used as fingerprinting categories
+# (CMS, chat widgets, cloud providers) in tracked files. Those are the usual
+# entries here. Add a word only after checking that its tracked occurrences are
+# genuinely generic; when in doubt, leave it out and let the gate block.
+#
+# Illustrative entries — replace with your own:
+#
+# acme                 # handle that is also an ordinary word
+# examplecrm           # vendor named as a recon fingerprint, not a target
+# cloudvendor          # cloud provider named as a metadata-endpoint category

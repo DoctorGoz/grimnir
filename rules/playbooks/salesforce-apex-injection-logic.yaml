@@ -1,0 +1,105 @@
+id: salesforce-apex-injection-logic
+version: "1"
+name: Salesforce Apex injection and access-control logic abuse (SOQLi / param tampering / deserialization)
+domain: web
+lead_agent: specter
+secondary_agents: [specter]
+tags: [salesforce, apex, lwc, aura, soql-injection, parameter-tampering, insecure-deserialization, without-sharing, authz, webruntime]
+description: >
+  The server side of a Salesforce Lightning site is Apex reached from the client via
+  /webruntime/api/apex/execute (LWC @wire / imperative) or aura://ApexActionController/ACTION$execute.
+  Because those calls are just HTTP, any client-supplied parameter can be tampered, and a method declared
+  "without sharing" runs in system context — so a query or DML it builds can be steered past the caller's
+  permissions. Three recurring mechanisms: (1) SOQL INJECTION where user input is concatenated into a
+  dynamic Database.query; (2) PARAMETER TAMPERING where a client param (profile, ownerId, filter) shapes
+  which rows come back; (3) INSECURE DESERIALIZATION where a generic importer builds arbitrary sObjects
+  from attacker input and upserts without CRUD/FLS checks. This is a code-quality class: the bug is in the
+  Apex, and "with sharing" default (post-2019) does NOT stop injection or a bad access-control design.
+prerequisites:
+  signals_any: [salesforce, apex, aura, lwc, webruntime, apex-execute, soql, force-com, my-site-com]
+  tech_any: [salesforce, lightning, apex, force.com, visualforce, sfdc, my.site.com]
+  auth: none for guest-exposed Apex; otherwise the lowest-privilege community/portal login you hold. A
+        second low-priv account sharpens the tampering differential but is not required.
+reachability:
+  gates: []
+  note: >
+    REACHABLE wherever the site exposes an Apex method to your privilege level (guest or a self-registerable
+    community user). If the only interesting methods require an approval-role login you cannot get, mark
+    those steps BLOCKED(approval-role). Injection/tampering proof needs no special gate beyond reaching the
+    method.
+chain:
+  - id: locate_apex
+    capability: recon
+    agent: specter
+    action: >
+      Enumerate Apex reachable at your privilege: watch proxy history for GET/POST
+      /webruntime/api/apex/execute (LWC) and aura://ApexActionController/ACTION$execute calls; url-decode
+      the params to read classname/method and each argument. Search responses for apex%3a%2f%2f and
+      compound://c to recover method signatures, or pull them from /auraCmpDef. If ApexClass is readable
+      (guest/low-priv getItems on ApexClass, Body field), pull the SOURCE and audit it directly for dynamic
+      SOQL, missing with sharing, and absent isAccessible/isUpdateable/WITH SECURITY_ENFORCED checks.
+  - id: param_tampering
+    capability: authz_bypass
+    agent: specter
+    action: >
+      For a method whose argument shapes the result set (a profile/type/status filter, an ownerId, a
+      recordId, a "public vs internal" flag), replay it with the value changed to one you should not be
+      able to select (e.g. profile Guest -> Client / "Customer Community Plus User", own ownerId -> another).
+      Data you are not entitled to coming back is the finding. Read-only; retrieve the minimum rows that
+      prove it and run the negative control (your own value returns only your data).
+    confirm: authz-confirm.py
+    evidence_class: authz
+  - id: soql_injection
+    capability: injection
+    agent: specter
+    action: >
+      Where a string argument is concatenated into a dynamic SOQL WHERE/ORDER BY, break out of the literal.
+      Classic returns-all payloads: profile = X' OR Name LIKE '% and searchTerm = ') OR (Name LIKE '% ;
+      URL-encode before sending. Proof is a differential: the injected request returns records outside the
+      intended filter (all rows / other owners) while the benign value does not. ORDER BY injection and
+      blind boolean/error variants apply where the value is not directly reflected. without-sharing classes
+      make this return the whole object.
+    confirm: poc-export.py
+    evidence_class: authz
+  - id: insecure_deserialization
+    capability: data_tampering
+    agent: specter
+    action: >
+      Where an importer/deserializer accepts a serialized blob (Base64 CSV/XML/JSON) and builds sObjects
+      dynamically (Schema.getGlobalDescribe().get(objectType).newSObject() then insert/upsert) without
+      per-object CRUD/FLS checks, supply an ObjectType/field set the feature should not accept (e.g. a
+      privileged object, or a field like IsAdmin/Profile). Confirm a record of that type was created or
+      updated, then REVERT it (delete/restore). This is a write — get explicit authorization, keep it to a
+      single benign marker record, and undo it.
+    confirm: authz-confirm.py
+    evidence_class: authz
+    optional: true
+  - id: without_sharing_chain
+    capability: authz_bypass
+    agent: specter
+    action: >
+      Chain a discovery step into an elevated method: a without-sharing @AuraEnabled method that reads or
+      DMLs by an id you supply (e.g. insertAttach/updateStatus on another user's caseId, a getX that
+      ignores sharing) lets you act on records you do not own. Confirm the cross-owner effect with a
+      differential and revert any write.
+    confirm: authz-confirm.py
+    evidence_class: authz
+    optional: true
+blockers:
+  - Apex declared "with sharing" AND parameterized/bound queries AND CRUD-FLS checks (isAccessible/WITH SECURITY_ENFORCED) — no lane
+  - the method binds user input as a query variable (:var) rather than concatenating — SOQL injection closed
+  - the importer validates object type and enforces FLS before upsert — deserialization closed
+  - the interesting methods are gated behind a login/role you cannot obtain
+  - ApexClass source not readable at your privilege (audit is then black-box only)
+never_submit:
+  - a param that changes the result WITHIN your own entitlement (your own filtered view) is not an authz bug
+  - SOQL metacharacters reflected in an error with no out-of-filter data returned is not proven injection
+  - a deserializer that accepts input but enforces CRUD/FLS so the write is rejected is hardening, not a bug
+  - never leave a test-created/modified record behind — an un-reverted write is out of bounds, not a PoC
+severity_ceiling: critical
+references:
+  - methodology doc specter/docs/salesforce-experience-cloud.md (read-only mapper specter/scripts/sf-guest-map.py)
+  - WSTG-INPV-05 (SQL/SOQL injection), CWE-89 / CWE-943 (query injection), CWE-639 (IDOR), CWE-502 (deserialization)
+  - Salesforce Apex security — with/without sharing, WITH SECURITY_ENFORCED, Schema isAccessible/isUpdateable, escapeSingleQuotes
+  - client paths — /webruntime/api/apex/execute (LWC), aura://ApexActionController/ACTION$execute (Aura)
+  - hunting rules — negative control on every authz/injection claim; revert all test writes (safe-harbor)

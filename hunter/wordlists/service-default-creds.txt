@@ -1,0 +1,19 @@
+# Format: service:username:password
+ftp:anonymous:anonymous
+ftp:ftp:ftp
+ssh:root:toor
+ssh:admin:admin
+mysql:root:
+mysql:root:root
+mysql:root:mysql
+postgres:postgres:postgres
+postgres:postgres:
+redis::
+mongodb:admin:admin
+tomcat:tomcat:tomcat
+tomcat:admin:admin
+tomcat:manager:manager
+jenkins:admin:admin
+vnc::password
+snmp::public
+snmp::private

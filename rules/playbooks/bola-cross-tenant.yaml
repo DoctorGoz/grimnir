@@ -1,0 +1,57 @@
+id: bola-cross-tenant
+version: "1"
+name: Cross-tenant object authorization bypass (BOLA/IDOR/BFLA)
+domain: api
+lead_agent: specter
+tags: [bola, idor, bfla, authz, multi-tenant, api1]
+description: >
+  The highest-yield API lane. Where two isolated tenants exist, test whether account A can
+  read or mutate account B's objects. Value is cross-tenant, never single-tenant, so this lane
+  is gated on holding a real second account. Proven only with a recorded negative control.
+prerequisites:
+  signals_any: [rest_api, api, multi_tenant, object_id, openapi]
+  tech_any: [openapi, swagger, graphql, grpc]
+  auth: two isolated tenant accounts, both write-capable
+reachability:
+  gates: [second-account]
+  note: BLOCKED without a genuine second tenant. Do not claim BOLA from a single account.
+chain:
+  - id: map_objects
+    capability: recon
+    agent: specter
+    action: Enumerate object-scoped endpoints (/orders/{id}, /users/{id}, /files/{id}) and the id format from the API surface.
+  - id: cross_read
+    next_on: {confirmed: cross_write}
+    capability: authz_bypass
+    agent: specter
+    action_class: read-only
+    action: Request account B's object id using account A's credentials; compare against own/nonexistent/malformed.
+    confirm: authz-confirm.py
+    confirm_args: >-
+      --url '{TARGET_URL_WITH_ID}' -H 'Authorization: Bearer {TOKEN_A}' --own-id {OWN_ID}
+      --victim-id {VICTIM_ID} --nonexistent-id 999999999 --victim-marker '{VICTIM_MARKER}'
+    evidence_class: authz
+  - id: cross_write
+    capability: authz_bypass
+    agent: specter
+    action_class: victim-data-write
+    action: Attempt to mutate account B's object with account A's credentials (write BOLA outranks read).
+    confirm: authz-confirm.py
+    confirm_args: >-
+      --url '{TARGET_URL_WITH_ID}' --method PATCH --body '{MUTATION_BODY}' -H 'Authorization:
+      Bearer {TOKEN_A}' --own-id {OWN_ID} --victim-id {VICTIM_ID} --nonexistent-id 999999999
+      --victim-marker '{VICTIM_MARKER}'
+    evidence_class: authz
+    optional: true
+blockers:
+  - tenant id derived server-side from the auth credential (not from the request)
+  - object ids are unguessable UUIDs with no enumeration oracle
+  - per-object ACL enforced independent of the id in the path
+never_submit:
+  - a path/body id is not by itself a BOLA signal; run the 4-way discriminator first
+  - cross-account responses that do not differ (no distinguishable victim data) are not a bypass
+severity_ceiling: high
+references:
+  - hunting Rule 3 (negative control required)
+  - hunting Rule 9 (A-to-B signal, distinguishable victim data)
+  - OWASP API1:2023 Broken Object Level Authorization

@@ -1,0 +1,85 @@
+id: salesforce-visualforce-xss
+version: "1"
+name: Salesforce Visualforce and Lightning component cross-site scripting
+domain: web
+lead_agent: specter
+tags: [salesforce, visualforce, apex-pages, aura, lwc, xss, escape-false, cookie-theft, csp]
+description: >
+  Visualforce pages (and Aura/LWC components) render server-side data into HTML. VF escapes by default,
+  but developers opt out constantly: escape="false" on apex:outputText / apex:outputField / merge fields,
+  or unescaped {!} expressions passed into JavaScript. Any user-influenced value (query param, record
+  field, search term) reaching an unescaped sink becomes reflected or stored XSS, reachable at
+  /apex/<Page> — often DIRECTLY, without the navigation that hides the page. This is a code-quality class:
+  the bug is an escape="false" (or a missing JSENCODE/HTMLENCODE/URLFOR), not a Salesforce 0day. A
+  community with session cookies missing HttpOnly (or permissive SameSite) lets the XSS steal the session
+  and jump to account takeover — that chain is what lifts severity. Prove execution in a real browser
+  (render-confirm); a payload that only fires in your own session is self-XSS and never ships.
+prerequisites:
+  signals_any: [salesforce, visualforce, apex-page, apex-page-url, force-com, aura, lwc, escape-false]
+  tech_any: [salesforce, visualforce, force.com, sfdc, lightning]
+  auth: none for guest-rendered VF pages; a low-privilege community/portal login opens the stored-field
+        sinks (profile fields, record data).
+reachability:
+  gates: []
+  note: >
+    REACHABLE wherever a VF page (or component) renders input at your privilege level — guest or
+    self-registered community user. Severity is gated by the sink and the session model: an escaped sink
+    is nothing; an unescaped reflected sink on a page only the attacker reaches caps at nothing (self-XSS);
+    an unescaped stored sink visible to other users plus HttpOnly-less session cookies is critical.
+chain:
+  - id: locate_pages
+    capability: recon
+    agent: specter
+    action: >
+      Enumerate Visualforce surfaces: /apex/<Page> paths from links/redirects/source, direct access to
+      pages hidden from navigation (guessing + harnessed names from JS), and any component markup served
+      to the guest. Direct page access is a lane of its own — a page not linked anywhere is still
+      reachable if the name is known.
+  - id: find_sinks
+    capability: recon
+    agent: specter
+    action: >
+      Identify user-influenced values reaching unescaped output: reflection of query params/record
+      fields/search terms in the response; source-visible escape="false" on apex:outputText/apex:outputField
+      or unescaped {!} merge fields inside script context; missing JSENCODE/HTMLENCODE/URLFOR around
+      dynamic URLs. A rendered-literal probe (angle brackets survive as markup) marks the sink; an
+      escaped echo ends the lane.
+  - id: prove_xss
+    capability: xss
+    agent: specter
+    action: >
+      Inject a benign payload at the sink and confirm script execution in a real browser
+      (render-confirm), not by eyeballing the HTML. For a stored sink (a record field another user sees),
+      plant with your own account only, view in your own second session or browser, and keep the payload
+      inert (alert/console marker, no exfil). Harm check: no victim data, no other users.
+    confirm: render-confirm.py
+    confirm_args: "{TARGET_URL} {PAYLOAD}"
+    evidence_class: xss
+  - id: escalate_session
+    capability: data_exfil
+    agent: specter
+    action: >
+      Only if the sink is victim-visible: inspect session cookies on the page for missing HttpOnly /
+      Secure / SameSite. XSS + HttpOnly-less session cookie = session theft = account takeover chain;
+      document the cookie flags as evidence. A HttpOnly-protected session still leaves the stored-XSS
+      finding at its own severity — do not overclaim the chain.
+    evidence_class: xss
+    optional: true
+blockers:
+  - the sink escapes input (VF default escaping, JSENCODE applied, CSP blocking inline execution) — no lane
+  - the reflection is only visible to the attacker's own session — self-XSS, never submittable
+  - the stored sink needs an account/role you cannot obtain
+  - WAF or lightning-locker (LWC) filters the payload or blocks DOM access
+never_submit:
+  - self-XSS — a payload that executes only in the attacker's own session, with no victim-visible context
+  - a reflected param that echoes escaped (HTML-encoded in the response) is not XSS
+  - XSS proven without a demonstrable impact chain (no session/action/other-user effect) is a hardening
+    note, not a report
+severity_ceiling: critical
+references:
+  - methodology doc specter/docs/salesforce-experience-cloud.md (read-only mapper specter/scripts/sf-guest-map.py)
+  - WSTG-CLNT-01 (testing for reflected/stored XSS), CWE-79
+  - Visualforce security — escape="false" on apex:outputText/apex:outputField, JSENCODE/HTMLENCODE/URLFOR,
+    auto-escaped merge fields are the default
+  - hunting rules — render-confirm before claiming execution; harm check (own accounts, inert payloads)
+  - LWC renders through the lightning-locker service — sandboxed, but Aura/VF do not auto-escape the same way

@@ -1,0 +1,87 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl*)",
+      "Bash(python3*)",
+      "Bash(httpx*)",
+      "Bash(nuclei*)",
+      "Bash(jq*)",
+      "Bash(gron*)",
+      "Bash(ffuf*)",
+      "Bash(katana*)",
+      "Bash(kr *)",
+      "Bash(arjun*)",
+      "Bash(wafw00f*)",
+      "Bash(grpcurl*)",
+      "Bash(subfinder*)",
+      "Bash(interactsh*)",
+      "Bash(semgrep*)",
+      "Bash(cat*)",
+      "Bash(grep*)",
+      "Bash(sort*)",
+      "Bash(wc*)",
+      "Bash(mkdir*)",
+      "Bash(cp*)",
+      "Bash(head*)",
+      "Bash(tail*)",
+      "Bash(base64*)",
+      "Bash(echo*)",
+      "Bash(bash scripts/*)",
+      "Bash(bash artemis/scripts/*)",
+      "Bash(bash artemis/promptfoo/*)",
+      "Bash(bash huginn/scripts/*)",
+      "Bash(bash hunter/scripts/*)",
+      "Bash(bash nimbus/scripts/*)",
+      "Bash(bash nomad/scripts/*)",
+      "Bash(bash specter/scripts/*)",
+      "Bash(nmap*)",
+      "Bash(masscan*)",
+      "Bash(naabu*)",
+      "Bash(netexec*)",
+      "Bash(enum4linux*)",
+      "Bash(hydra*)",
+      "Bash(searchsploit*)",
+      "Bash(smbclient*)",
+      "Bash(dnsrecon*)",
+      "Bash(whatweb*)",
+      "Bash(nikto*)",
+      "Bash(openssl*)",
+      "Bash(ls*)",
+      "Bash(find*)",
+      "Bash(date*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Grep",
+      "Glob"
+    ],
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -fr /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(sudo rm*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(bash *full*audit*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo GRIMNIR: Full audit — confirm target scope and authorization before proceeding"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(sqlmap*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo GRIMNIR: sqlmap — ensure --batch flag and verify scope"
+          }
+        ]
+      }
+    ]
+  }
+}

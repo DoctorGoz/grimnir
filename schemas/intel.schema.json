@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grimnir.local/schemas/intel.schema.json",
+  "title": "Grimnir Intel Discovery Entry",
+  "description": "Single discovery entry in the intel feed (one line of intel.jsonl)",
+  "type": "object",
+  "required": ["id", "timestamp", "source_agent", "discovery_type", "data", "confidence"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^INTEL-[0-9]{6}$",
+      "description": "Sequential discovery ID (INTEL-000001)"
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "source_agent": {
+      "type": "string",
+      "enum": ["huginn", "specter", "artemis", "hunter", "nimbus", "nomad", "grimnir", "intel"]
+    },
+    "discovery_type": {
+      "type": "string",
+      "enum": [
+        "endpoint", "service", "credential", "technology",
+        "vulnerability_hint", "api_spec", "subdomain",
+        "certificate", "relationship", "note"
+      ]
+    },
+    "data": {
+      "type": "object",
+      "description": "Type-specific data payload"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["confirmed", "high", "medium", "low", "unverified"]
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Routing tags: needs-huginn, needs-specter, needs-artemis, needs-hunter, needs-nimbus, needs-nomad, high-value, tested, untested"
+    },
+    "processed": {
+      "type": "boolean",
+      "default": false
+    },
+    "processed_by": { "type": "string" },
+    "related_finding": {
+      "type": "string",
+      "description": "If this led to a finding, the finding ID"
+    }
+  }
+}

@@ -1,0 +1,56 @@
+id: mass-assignment-bopla
+version: "1"
+name: Mass assignment on REST writes (BOPLA)
+domain: api
+lead_agent: specter
+tags: [bopla, mass-assignment, api3, privilege, write]
+description: >
+  A REST write endpoint binds the request body to the model wholesale, so a client can set a
+  property it should not control (role, is_admin, verified, plan, credits, owner_id). Tested only
+  on the caller's OWN resource with a read-before / write / read-after differential, so a field
+  that already held the value, or that the server silently dropped, is never a false positive.
+prerequisites:
+  signals_any: [rest_api, api, openapi, swagger, json_body, user_profile, account_settings]
+  tech_any: [openapi, swagger, rails, django, laravel, express, spring]
+  auth: one account; the write lands on that account's own resource
+reachability:
+  gates: [first-credential]
+  note: Needs a credential that can write its own resource. Never fire on a scarce account.
+chain:
+  - id: map_writable
+    capability: recon
+    agent: specter
+    action: >
+      From the corpus and any OpenAPI spec, list PATCH/PUT/POST endpoints on the caller's own
+      resources, and the privileged properties the READ model exposes but the write schema omits.
+  - id: inject_own
+    next_on: {confirmed: prove_effect}
+    capability: mass_assignment
+    agent: specter
+    action_class: reversible
+    action: >
+      Write the caller's own resource with one injected privileged property, then read it back.
+      Confirmed only when the property was not already that value AND the write made it stick.
+      Restore the original value afterwards.
+    confirm: bopla-confirm.py
+    confirm_args: >-
+      --method PATCH --url '{OWN_RESOURCE_URL}' --field {PRIVILEGED_FIELD} --value {INJECTED_VALUE}
+      -H 'Authorization: Bearer {TOKEN}'
+    evidence_class: bopla
+  - id: prove_effect
+    capability: impact
+    agent: specter
+    action: >
+      Show the stuck property changes what the account can do (an admin-only route now returns
+      200, a paid feature unlocks). A stored property with no effect is not a privilege escalation.
+    optional: true
+blockers:
+  - the write schema is an explicit allow-list (unknown fields rejected with 400 or dropped)
+  - privileged properties are derived server-side and not stored from input
+never_submit:
+  - a property that stores but changes no authorization decision or entitlement
+  - an injected value the UI already lets the user set
+severity_ceiling: high
+references:
+  - OWASP API3:2023 Broken Object Property Level Authorization
+  - hunting Rule 33 (no irreversible writes on a real account)

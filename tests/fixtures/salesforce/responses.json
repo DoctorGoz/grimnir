@@ -1,0 +1,10 @@
+{
+  "_comment": "Synthetic recorded-shape responses for sf-guest-map.py tests. Host site.example.com; no real data.",
+  "bootstrap": "<html><head><script src=\"/s/sfsites/l/%7B%22mode%22%3A%22PROD%22%2C%22fwuid%22%3A%22FWUID_SYNTH_001%22%2C%22app%22%3A%22siteforce%3AcommunityApp%22%2C%22loaded%22%3A%7B%22APPLICATION%40markup%3A%2F%2Fsiteforce%3AcommunityApp%22%3A%221706_SYNTHAPPID%22%7D%7D/app.js\"></script><script>$A.componentService.addComponentClass(\"compound://c.PortalSearch\");var x=\"apex://PortalSearchCtrl/ACTION$findRecords\";</script></head><body>site.example.com</body></html>",
+  "config": "{\"actions\":[{\"id\":\"1\",\"state\":\"SUCCESS\",\"returnValue\":{\"apiNamesToKeyPrefixes\":{\"Account\":\"001\",\"Contact\":\"003\",\"Case\":\"500\",\"Widget__c\":\"a01\",\"Partner_Key__c\":\"a02\",\"Knowledge__kav\":\"ka0\"}}}]}",
+  "items_empty": "*/{\"actions\":[{\"id\":\"1\",\"state\":\"SUCCESS\",\"returnValue\":{\"result\":[],\"totalCount\":0}}]}",
+  "items_rows": "{\"actions\":[{\"id\":\"1\",\"state\":\"SUCCESS\",\"returnValue\":{\"result\":[{\"record\":{\"Id\":\"a01000000000001AAA\"}}],\"totalCount\":3}}]}",
+  "info": "{\"actions\":[{\"id\":\"1\",\"state\":\"SUCCESS\",\"returnValue\":{\"apiName\":\"Partner_Key__c\",\"fields\":{\"Id\":{},\"Name\":{},\"Api_Key__c\":{},\"Region__c\":{}}}}]}",
+  "out_of_sync": "{\"event\":{\"descriptor\":\"markup://aura:clientOutOfSync\"},\"actions\":[]}",
+  "denied": "{\"actions\":[{\"id\":\"1\",\"state\":\"ERROR\",\"error\":[{\"message\":\"Invalid or no access\"}]}]}"
+}

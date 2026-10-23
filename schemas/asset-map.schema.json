@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grimnir.local/schemas/asset-map.schema.json",
+  "title": "Grimnir Asset Map",
+  "description": "Unified attack surface inventory produced by HUGINN during Phase 0 recon",
+  "type": "object",
+  "required": ["target", "generated_at", "generated_by"],
+  "properties": {
+    "target": {
+      "type": "string",
+      "description": "Primary target (URL, IP, CIDR, or domain)"
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generated_by": {
+      "type": "string",
+      "const": "huginn"
+    },
+    "hosts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ip": { "type": "string" },
+          "hostname": { "type": "string" },
+          "ports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "port": { "type": "integer" },
+                "protocol": { "type": "string", "enum": ["tcp", "udp"] },
+                "state": { "type": "string" },
+                "service": { "type": "string" },
+                "version": { "type": "string" }
+              },
+              "required": ["port", "protocol"]
+            }
+          },
+          "os": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "subdomains": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fqdn": { "type": "string" },
+          "resolved_ip": { "type": "string" },
+          "status_code": { "type": "integer" },
+          "title": { "type": "string" },
+          "technologies": { "type": "array", "items": { "type": "string" } },
+          "source": { "type": "string" }
+        },
+        "required": ["fqdn"]
+      }
+    },
+    "technologies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["framework", "language", "server", "cdn", "waf", "cms", "database", "cache", "ai", "analytics", "other"]
+          },
+          "source": { "type": "string", "description": "How it was detected (headers, JS, fingerprint, etc.)" }
+        },
+        "required": ["name", "category"]
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string" },
+          "method": { "type": "string" },
+          "status_code": { "type": "integer" },
+          "content_type": { "type": "string" },
+          "auth_required": { "type": "boolean" },
+          "parameters": { "type": "array", "items": { "type": "string" }, "description": "Query parameter NAMES (values never stored here)" },
+          "body_fields": { "type": "array", "items": { "type": "string" }, "description": "Request-body field NAMES observed by the authenticated crawl (values discarded). Feeds downstream analysis BOPLA detection." },
+          "source": { "type": "string", "description": "How discovered (authed-crawl, JS analysis, fuzzing, etc.)" },
+          "tags": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["url"]
+      }
+    },
+    "fetch_surfaces": {
+      "type": "array",
+      "description": "Server-side-fetch surfaces detected by huginn/scripts/fetch-surface.py. Each entry names WHERE the server fetches on a user's behalf, which is what selects the SSRF playbook lanes. A hit is a lane to consider, never a finding: the evidence is a URL shape, and Specter still has to prove the server dereferences anything. `confidence` says how much the shape is worth.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "surface": { "type": "string", "description": "Signal token, e.g. url_fetch, webhook, screenshot, thumbnail, delivery_log." },
+          "confidence": { "type": "string", "enum": ["weak", "moderate", "strong"] },
+          "evidence": { "type": "array", "items": { "type": "string" } },
+          "endpoints": { "type": "integer", "description": "How many endpoints[] entries carry this surface tag." }
+        },
+        "required": ["surface", "confidence"]
+      }
+    },
+    "auth_mechanisms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["api_token", "session_cookie", "oauth2", "basic_auth", "bearer_token", "jwt", "api_key_header", "saml", "other"]
+          },
+          "details": { "type": "string" }
+        },
+        "required": ["type"]
+      }
+    },
+    "ai_indicators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "indicator": { "type": "string", "description": "What was found (chat widget, LLM endpoint, AI trigger, etc.)" },
+          "location": { "type": "string", "description": "Where it was found" },
+          "confidence": { "type": "string", "enum": ["confirmed", "high", "medium", "low"] }
+        },
+        "required": ["indicator", "location"]
+      },
+      "description": "Indicators of AI/LLM features for ARTEMIS routing"
+    },
+    "waf": {
+      "type": "object",
+      "properties": {
+        "detected": { "type": "boolean" },
+        "product": { "type": "string" },
+        "details": { "type": "string" }
+      }
+    },
+    "certificates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "host": { "type": "string" },
+          "issuer": { "type": "string" },
+          "subject": { "type": "string" },
+          "san": { "type": "array", "items": { "type": "string" } },
+          "not_after": { "type": "string" },
+          "issues": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "js_analysis": {
+      "type": "object",
+      "properties": {
+        "files_analyzed": { "type": "integer" },
+        "api_endpoints_found": { "type": "array", "items": { "type": "string" } },
+        "secrets_found": { "type": "array", "items": { "type": "string" } },
+        "interesting_strings": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "attack_surface_summary": {
+      "type": "string",
+      "description": "Human-readable summary of the attack surface for specialist agents"
+    },
+    "routing_recommendations": {
+      "type": "object",
+      "description": "HUGINN's recommendations for which specialists should focus where",
+      "properties": {
+        "specter": { "type": "array", "items": { "type": "string" } },
+        "artemis": { "type": "array", "items": { "type": "string" } },
+        "hunter": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

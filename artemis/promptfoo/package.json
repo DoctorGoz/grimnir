@@ -1,0 +1,21 @@
+{
+  "name": "grimnir-artemis-promptfoo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "promptfoo adversarial evaluation configs for GRIMNIR ARTEMIS — automated LLM red teaming with structured assertions",
+  "scripts": {
+    "eval": "promptfoo eval",
+    "eval:rag": "promptfoo eval -c configs/rag-eval-config.yaml",
+    "eval:chat": "promptfoo eval -c configs/chat-eval-config.yaml",
+    "view": "promptfoo view"
+  },
+  "dependencies": {
+    "promptfoo": "^0.121.15"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["llm", "security", "red-team", "prompt-injection", "rag", "genai"],
+  "author": "GRIMNIR ARTEMIS",
+  "license": "MIT"
+}

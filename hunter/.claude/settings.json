@@ -1,0 +1,74 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nmap*)",
+      "Bash(masscan*)",
+      "Bash(naabu*)",
+      "Bash(netexec*)",
+      "Bash(enum4linux*)",
+      "Bash(hydra*)",
+      "Bash(smbclient*)",
+      "Bash(nuclei*)",
+      "Bash(searchsploit*)",
+      "Bash(dnsrecon*)",
+      "Bash(dnsx*)",
+      "Bash(whatweb*)",
+      "Bash(nikto*)",
+      "Bash(openssl*)",
+      "Bash(ncat*)",
+      "Bash(curl*)",
+      "Bash(jq*)",
+      "Bash(cat*)",
+      "Bash(grep*)",
+      "Bash(sort*)",
+      "Bash(wc*)",
+      "Bash(mkdir*)",
+      "Bash(cp*)",
+      "Bash(head*)",
+      "Bash(tail*)",
+      "Bash(echo*)",
+      "Bash(bash scripts/*)",
+      "Bash(bash hunter/*)",
+      "Read",
+      "Write",
+      "Edit",
+      "Grep",
+      "Glob"
+    ],
+    "deny": [
+      "Bash(rm -rf /)*",
+      "Bash(sudo rm*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(masscan*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: masscan — verify rate limit (--rate) and scope before proceeding"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(hydra*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: hydra credential attack — confirm target is in scope and rate-limited"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(bash hunter/scripts/full*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: Full audit — confirm target scope and authorization before proceeding"
+          }
+        ]
+      }
+    ]
+  }
+}

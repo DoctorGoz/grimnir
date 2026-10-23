@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grimnir.local/schemas/decision.schema.json",
+  "title": "Grimnir Orchestrator Decision",
+  "description": "One line of decisions.jsonl \u2014 an append-only audit trail of WHY the orchestrator engaged, skipped, dispatched, or deferred a lane. Complements state.json (lifecycle), intel.jsonl (what was found), and event-emitter record-negative (dead-lane outcomes). Adapted from the Kittysploit agent_decision model, re-cast for a delegating PM brain: the reasoning trail that makes /sitrep and /resume explain themselves.",
+  "type": "object",
+  "required": [
+    "id",
+    "timestamp",
+    "decision_type",
+    "reason"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^DECISION-[0-9]{6}$",
+      "description": "Sequential decision ID (DECISION-000001)."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actor": {
+      "type": "string",
+      "pattern": "^(grimnir|operator|huginn|specter|artemis|hunter|nimbus|nomad|report-compiler)$",
+      "description": "Who made the call: grimnir (the orchestrator), operator, or a specialist agent id. Enum, not free text — a filesystem-writing agent must not be able to mint an entry that reads as a genuine human decision.",
+      "default": "grimnir"
+    },
+    "actor_verified": {
+      "type": "boolean",
+      "description": "Present when actor=operator. true only when a matching operator-presence token was supplied; false means the 'operator' actor is a RELAYED, unproven claim."
+    },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "originated",
+        "relayed"
+      ],
+      "description": "originated = the actor recorded this directly; relayed = another process recorded it on the actor's behalf (see relayed_by). An operator claim without a verified token is always relayed."
+    },
+    "relayed_by": {
+      "type": "string",
+      "description": "The process that recorded the entry on the actor's behalf, when provenance=relayed."
+    },
+    "authorization": {
+      "type": "object",
+      "description": "Present only on entries that lift a safety boundary (--authorize). A specialist reads status before treating the entry as consent.",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "VERIFIED-OPERATOR",
+            "UNVERIFIED-RELAY"
+          ],
+          "description": "VERIFIED-OPERATOR only with a matching operator-presence token; UNVERIFIED-RELAY otherwise and must NOT be treated as consent to cross a custody/financial/destructive boundary."
+        },
+        "verified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "reasoning",
+        "heuristic",
+        "operator",
+        "policy",
+        "reachability",
+        "brief"
+      ],
+      "description": "What drove the decision. reachability = the gate matrix; brief = the spend/skip prior; policy = a hunting/never-submit rule; operator = a human call.",
+      "default": "reasoning"
+    },
+    "decision_type": {
+      "type": "string",
+      "enum": [
+        "engage",
+        "skip",
+        "dispatch",
+        "defer",
+        "pivot",
+        "escalate",
+        "gate-block",
+        "no-file",
+        "close"
+      ],
+      "description": "The kind of routing decision.  no-file = a confirmed finding was deliberately NOT submitted; records why, so an unfiled finding can be told apart from an unexamined one."
+    },
+    "subject": {
+      "type": "string",
+      "description": "What the decision is about: a lane, a target, an agent, or a playbook id."
+    },
+    "goal": {
+      "type": "string",
+      "description": "The objective this decision serves (optional)."
+    },
+    "chosen": {
+      "type": "string",
+      "description": "The action taken, e.g. 'dispatch specter on bola-cross-tenant'."
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Options considered but not taken (and, ideally, why-not folded into reason)."
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Why this decision was made. Required \u2014 the whole point of the log."
+    },
+    "reachability_ref": {
+      "type": "string",
+      "description": "Reachability verdict that drove it, e.g. 'BLOCKED(second-account)' or 'REACHABLE'."
+    },
+    "playbook_id": {
+      "type": "string",
+      "description": "Linked playbook (rules/playbooks/<id>.yaml) when the decision selected or skipped one."
+    },
+    "related_intel": {
+      "type": "string",
+      "pattern": "^INTEL-[0-9]{6}$",
+      "description": "Intel entry that prompted the decision."
+    },
+    "related_finding": {
+      "type": "string",
+      "pattern": "^FINDING-[0-9]{3}$",
+      "description": "Finding this decision produced or acted on."
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    }
+  }
+}

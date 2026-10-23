@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grimnir.local/schemas/playbook.schema.json",
+  "title": "Grimnir Attack Playbook",
+  "description": "A declarative, reachability-aware attack chain. Unlike an execution framework's playbook (which fires modules), a Grimnir playbook is a DECISION recipe: given HUGINN recon signals + the reachability gate taxonomy, it says which specialist to dispatch, what capability each step proves, which confirm-harness artifact validates it, and which never-submit traps the lane risks. Adapted from the Kittysploit playbook model; fitted to Grimnir's delegate-don't-execute design.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "domain",
+    "lead_agent",
+    "prerequisites",
+    "chain"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Stable kebab-case identifier, matches the filename stem."
+    },
+    "version": {
+      "type": "string",
+      "default": "1"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 120
+    },
+    "domain": {
+      "type": "string",
+      "enum": [
+        "web",
+        "api",
+        "genai",
+        "mcp",
+        "network",
+        "cloud",
+        "mobile"
+      ],
+      "description": "Primary domain; drives which specialist leads."
+    },
+    "lead_agent": {
+      "type": "string",
+      "enum": [
+        "huginn",
+        "specter",
+        "artemis",
+        "hunter",
+        "nimbus",
+        "nomad"
+      ]
+    },
+    "secondary_agents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "huginn",
+          "specter",
+          "artemis",
+          "hunter",
+          "nimbus",
+          "nomad"
+        ]
+      },
+      "description": "Agents a later step hands off to (e.g. Specter finds SSRF -> Nimbus harvests IMDS creds)."
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "prerequisites": {
+      "type": "object",
+      "description": "When to even consider this playbook. Matched against HUGINN's asset-map.json (technologies, ai_indicators) and intel.jsonl (discovery_type + tags). ANY-of semantics within each list.",
+      "properties": {
+        "signals_any": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Recon signals: intel discovery_type/tags or asset-map indicators (e.g. graphql, ssrf, webhook, multi_tenant, mcp, imds)."
+        },
+        "tech_any": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Case-insensitive substrings matched against asset-map technologies[].name (e.g. wordpress, aws, apollo, grpc)."
+        },
+        "auth": {
+          "type": "string",
+          "description": "Free-form auth precondition, e.g. 'two isolated tenant accounts, both write-capable'."
+        }
+      }
+    },
+    "reachability": {
+      "type": "object",
+      "description": "The Grimnir-native overlay. Names the gates from the reachability taxonomy that BLOCK this lane if not held; the matcher reads $PROJECT_DIR/reachability.json (gates_held) and annotates the playbook REACHABLE / BLOCKED(gate) / UNKNOWN. Do not plan a primary lane you cannot reach (hunting Rule 1/20-23).",
+      "properties": {
+        "gates": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "kyc",
+              "funded-balance",
+              "second-account",
+              "first-credential",
+              "oauth-app",
+              "device",
+              "paid-tier",
+              "geo-egress",
+              "browser-interactive",
+              "otp-2fa",
+              "approval-role"
+            ]
+          }
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "chain": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "capability",
+          "agent",
+          "action"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Step identifier, unique within the playbook."
+          },
+          "capability": {
+            "type": "string",
+            "description": "What this step achieves in Grimnir vocabulary (e.g. recon, authz_bypass, ssrf_primitive, deblind, cloud_credentials, data_exfil, prompt_injection, tool_abuse)."
+          },
+          "agent": {
+            "type": "string",
+            "enum": [
+              "huginn",
+              "specter",
+              "artemis",
+              "hunter",
+              "nimbus",
+              "nomad"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "description": "Human-readable description of the test to run."
+          },
+          "action_class": {
+            "type": "string",
+            "description": "Phase B action-safety class of this step, driving whether the live-fire lane runner may auto-fire it: read-only | own-account-read (auto-fire, any severity) vs reversible | victim-data-write | destructive (human only). Absence is inferred from the HTTP method. Read by the future lane synthesizer; the executor's gate re-derives it per lane.",
+            "enum": ["read-only", "own-account-read", "reversible", "victim-data-write", "destructive"]
+          },
+          "confirm": {
+            "type": "string",
+            "description": "Confirm-harness primitive that turns this step from theoretical to confirmed (authz-confirm.py, oob-listener.py, render-confirm.py, mcp-confirm.py, poc-export.py). Absence = no automated proof primitive; validate manually."
+          },
+          "evidence_class": {
+            "type": "string",
+            "description": "The scripts/validate-finding.sh --class this step's finding maps to (authz, xss, ssrf, ...). Drives the High/Critical evidence gate."
+          },
+          "optional": {
+            "type": "boolean",
+            "default": false
+          },
+          "next_on": {
+            "type": "object",
+            "description": "The step a verdict on this step raises confirmed -> the escalation, candidate -> the step that firms it up. Values are step ids in this chain; the next step is raised for the operator or an agent.",
+            "properties": {
+              "confirmed": {"type": "string"},
+              "candidate": {"type": "string"}
+            },
+            "additionalProperties": false
+          },
+          "confirm_args": {
+            "type": "string",
+            "description": "Argument template for `confirm`, so `playbook.py plan` can emit a runnable command instead of only naming the primitive. --finding-id and --project-dir are supplied by plan; write only the step-specific arguments here. Use {PLACEHOLDER} for values the operator must fill from the live target (e.g. {TARGET_URL}, {TOKEN_A}, {VICTIM_ID}) -- plan lists them so it is obvious what the step still needs."
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Technical barriers that defeat the chain (prose): e.g. 'IMDSv2 with hop limit 1', 'introspection disabled in prod'. Distinct from reachability gates (which are about what the OPERATOR holds)."
+    },
+    "never_submit": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "never-submit.md triggers this lane risks tripping (e.g. 'blind SSRF with no demonstrable impact', 'CORS without data exposure'). A reminder, not a hard block."
+    },
+    "response_channel": {
+      "type": "object",
+      "description": "For lanes whose severity is set by WHAT COMES BACK rather than by the request itself (SSRF above all). A server-side request that fires but returns nothing is the floor of its class; the same request becomes critical when the response is readable. Naming the attainable rungs and the oracle that reads them stops a lane being filed at the floor by default, and stops severity_ceiling being asserted without a channel that could ever justify it.",
+      "properties": {
+        "ladder": {
+          "type": "array",
+          "description": "Rungs this lane can realistically reach, weakest first.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "blind",
+              "partial",
+              "full",
+              "credential",
+              "execution"
+            ]
+          }
+        },
+        "oracle": {
+          "type": "string",
+          "description": "How the response is actually read back: OOB callback only (blind), a delivery log, a rendered screenshot/PDF, an og: metadata field, an error string, a length/timing delta, or a full body reflection."
+        },
+        "note": {
+          "type": "string"
+        }
+      }
+    },
+    "severity_ceiling": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info"
+      ],
+      "description": "Best realistic severity if the terminal step lands. For lanes carrying a response_channel, the ceiling must be justified by the top rung of that ladder -- a blind-only channel caps at medium no matter how good the primitive is."
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Generic references only (OWASP, CVE, hunting-rule numbers). NEVER name a real program, target, or operator artifact \u2014 this file is public."
+    }
+  }
+}

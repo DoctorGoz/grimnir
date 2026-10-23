@@ -1,0 +1,65 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ffuf*)",
+      "Bash(nuclei*)",
+      "Bash(katana*)",
+      "Bash(kr *)",
+      "Bash(arjun*)",
+      "Bash(wafw00f*)",
+      "Bash(httpx*)",
+      "Bash(subfinder*)",
+      "Bash(grpcurl*)",
+      "Bash(jq*)",
+      "Bash(curl*)",
+      "Bash(cat*)",
+      "Bash(grep*)",
+      "Bash(sort*)",
+      "Bash(wc*)",
+      "Bash(mkdir*)",
+      "Bash(getJS*)",
+      "Read",
+      "Write",
+      "Grep",
+      "Glob"
+    ],
+    "deny": [
+      "Bash(rm -rf /)*",
+      "Bash(sudo *)"
+    ]
+  },
+  "mcpServers": {
+    "ghost-security": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/ghost-security-mcp"
+      ],
+      "env": {
+        "GHOST_API_KEY": "${GHOST_API_KEY}"
+      }
+    }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash(sqlmap*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: sqlmap - ensure --batch flag and scope"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash(ffuf*)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo WARNING: ffuf fuzzing - verify rate limit and scope"
+          }
+        ]
+      }
+    ]
+  }
+}

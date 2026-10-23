@@ -1,0 +1,72 @@
+id: missing-auth-replay
+version: "1"
+name: Missing authentication on routes the client calls with a session
+domain: api
+lead_agent: specter
+tags: [missing-auth, auth-bypass, bfla, authn, api2, api5]
+description: >
+  The requests our own accounts actually sent are a list of routes the product means to protect.
+  Replay each one with its credentials removed, and again with the second account's: a route that
+  still returns the owner's data to the anonymous caller is missing its check. Gateways that guard
+  some paths and handlers that assume the gateway did are the usual cause. Value is the data the
+  route returns; a route that serves the same public content to everyone is not a finding.
+prerequisites:
+  signals_any: [rest_api, api, web, graphql, session, authed_traffic]
+  tech_any: []
+  auth: one account with captured traffic; a second account sharpens the verdict
+reachability:
+  gates: [first-credential]
+  note: Needs organic authenticated traffic (Caido history via caido-export.py) and a live session.
+chain:
+  - id: collect_authed
+    capability: recon
+    agent: huginn
+    action: >
+      Export the proxied history (caido-export.py), merge it into the corpus (corpus-build.py), and
+      keep the successful authenticated reads. One route per template: ids and query values vary,
+      the check does not.
+  - id: replay_stripped
+    next_on: {confirmed: map_siblings, candidate: prove_private}
+    capability: authn_bypass
+    agent: specter
+    action_class: read-only
+    action: >
+      Replay the read with the owner's credentials (positive control), with every credential header
+      removed, and with the second account's credentials. The owner's private data in the anonymous
+      response confirms; the owner's public identifiers, or the owner's per-account response
+      returned to the anonymous caller, is a candidate.
+    confirm: authn-confirm.py
+    confirm_args: >-
+      --method GET --url '{AUTHED_URL}' -H 'Authorization: Bearer {TOKEN_A}'
+      --other-header 'Authorization: Bearer {TOKEN_B}' --private-marker '{EMAIL_A}'
+    evidence_class: authn
+  - id: prove_private
+    capability: impact
+    agent: specter
+    action: >
+      Decide whether what the anonymous caller got is private. Compare with what the product shows a
+      logged-out visitor for the same account (profile page, public API). Data the product already
+      publishes closes the lane (hunting Rule 31); data it does not show anonymously makes it a
+      finding, and a second identifier from the response becomes a private marker for a re-run.
+  - id: map_siblings
+    capability: authn_bypass
+    agent: specter
+    action_class: read-only
+    action: >
+      A route missing its check usually has siblings under the same router. Replay the confirmed
+      route's neighbours (same path prefix, other verbs read-only) without credentials and list
+      which also answer. Writes stay with the operator.
+    optional: true
+blockers:
+  - the route is public by design (the same data is on the logged-out page)
+  - the session is a cookie the browser sends to every subdomain, so the request never needed it
+never_submit:
+  - a 200 that carries no account data (an empty list, a public catalogue, a feature flag)
+  - an identifier the product already shows publicly (a username on a public profile)
+  - a replay of our own request that returns the owner's data only because the URL names it and the data is public
+severity_ceiling: critical
+references:
+  - hunting Rule 3 (negative control required)
+  - hunting Rule 31 (intended unauthenticated access defeats missing-auth)
+  - OWASP API2:2023 Broken Authentication
+  - OWASP API5:2023 Broken Function Level Authorization

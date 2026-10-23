@@ -1,0 +1,735 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grimnir.local/schemas/finding.schema.json",
+  "title": "Grimnir Unified Finding",
+  "description": "Structured finding format for all Grimnir specialist agents",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "severity",
+    "description",
+    "impact",
+    "agent",
+    "created_at"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^([A-Z]{3}|FINDING)-[0-9]{3}$",
+      "description": "Finding id in AGT-NNN form: a three-letter agent prefix (HUG/SPE/ART/HUN/NIM/NOM) plus three digits, e.g. SPE-024. The prefix makes the bare id unique across a project -- the older FINDING-NNN form was not, since every agent numbered from 001, and a tool resolving a bare id could write to the wrong finding. FINDING-NNN is still accepted for pre-existing findings; enforce forward, leave history alone."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 200
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info"
+      ]
+    },
+    "cvss_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 10.0,
+      "description": "CVSS 3.1 base score (or AIVSS for AI findings)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "suspected",
+        "under_investigation",
+        "false_positive"
+      ],
+      "default": "confirmed",
+      "description": "Triage state \u2014 is this believed to be a real vulnerability? Orthogonal to validation (evidence strength)."
+    },
+    "validation": {
+      "type": "object",
+      "description": "Evidence strength \u2014 how thoroughly the finding has been proven. The 'wet/dry' dimension, orthogonal to status. New findings default to 'theoretical'; only 'confirmed' findings may ship in a report or external submission.",
+      "properties": {
+        "state": {
+          "type": "string",
+          "enum": [
+            "theoretical",
+            "validated",
+            "confirmed",
+            "refuted"
+          ],
+          "default": "theoretical",
+          "description": "theoretical = believed real but no reproducible PoC (dry); validated = reproduced at least once; confirmed = reproducible PoC plus an independent check / negative control (wet); refuted = proven false."
+        },
+        "method": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "manual-repro",
+              "negative-control",
+              "screenshot",
+              "second-opinion",
+              "tool-output",
+              "out-of-band"
+            ]
+          },
+          "description": "How the finding was validated. negative-control is strongly expected for authz findings (BOLA/IDOR/BFLA)."
+        },
+        "negative_control": {
+          "type": "string",
+          "description": "What the negative control was and its result (e.g. 'non-existent ID 999999 -> 404; victim ID -> 200 with victim data'). Distinguishes a real authz bypass from identical-looking responses."
+        },
+        "screenshot": {
+          "type": "string",
+          "description": "Relative path from $PROJECT_DIR to a screenshot that visually confirms the vulnerability manifested (for the orchestrator to read and confirm)."
+        },
+        "vuln_class": {
+          "type": "string",
+          "description": "The --class passed to validate-finding.sh (ssrf, bola, xss, ...). Persisted so the evidence gate and the 7-question gate can re-run later (e.g. from report-compiler --gate-dry-run) without the caller re-supplying it."
+        },
+        "victim_data": {
+          "type": "boolean",
+          "description": "Did the PoC demonstrate a SECOND party's real data (read or mutated), rather than only our own capability against our own account? Capability-only proofs consistently fail to earn, regardless of severity or novelty (hunting Rule 28). For access-control classes this drives the Q2 impact verdict."
+        },
+        "checked_by": {
+          "type": "string",
+          "description": "Who promoted the finding (operator, grimnir, or a specialist agent name)."
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-form validation notes."
+        }
+      },
+      "required": [
+        "state"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "description": "Clear, concise description of the vulnerability"
+    },
+    "impact": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "confidentiality": {
+          "type": "string"
+        },
+        "integrity": {
+          "type": "string"
+        },
+        "availability": {
+          "type": "string"
+        },
+        "business": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "summary"
+      ]
+    },
+    "affected_targets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "URLs, hosts, IPs, or components affected"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "request_response",
+              "payload",
+              "screenshot",
+              "log",
+              "script_output",
+              "file",
+              "statistical"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path to evidence file from $PROJECT_DIR"
+          },
+          "inline": {
+            "type": "string",
+            "description": "Inline evidence content (for small payloads, responses)"
+          }
+        },
+        "required": [
+          "type",
+          "description"
+        ]
+      }
+    },
+    "reproduction_steps": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ordered steps to reproduce"
+    },
+    "remediation": {
+      "type": "object",
+      "properties": {
+        "immediate": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "short_term": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "long_term": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "frameworks": {
+      "type": "object",
+      "description": "Mappings to security frameworks",
+      "properties": {
+        "owasp_api": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owasp_llm": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owasp_agentic": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owasp_wstg": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cwe": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mitre_attack": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mitre_atlas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "ptes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "agent": {
+      "type": "string",
+      "enum": [
+        "huginn",
+        "specter",
+        "artemis",
+        "hunter",
+        "nimbus",
+        "nomad"
+      ],
+      "description": "Source agent (nimbus = Cloud, nomad = Mobile)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "references": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "URLs to OWASP pages, CVEs, research papers"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Free-form tags for cross-referencing"
+    },
+    "chain_id": {
+      "type": "string",
+      "description": "Links related findings into attack chains (e.g. CHAIN-001). Findings sharing a chain_id form a multi-step attack narrative across agents."
+    },
+    "chain_position": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Position in the attack chain sequence (1 = initial access, 2 = next step, etc.)"
+    },
+    "specter_ext": {
+      "type": "object",
+      "description": "Specter-specific fields (API/Web)",
+      "properties": {
+        "endpoint": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "OPTIONS",
+            "HEAD",
+            "TRACE"
+          ]
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string",
+                "enum": [
+                  "query",
+                  "path",
+                  "header",
+                  "body",
+                  "cookie"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "request": {
+          "type": "string"
+        },
+        "request_encoding": {
+          "type": "string",
+          "enum": ["utf8", "base64"],
+          "description": "How `request` is stored. Absent or 'utf8' = literal text. 'base64' = the raw request bytes were not clean UTF-8 (a captured binary body, or a WAF-evasion payload with control/overlong bytes), so they are base64-encoded to preserve them exactly rather than let JSON storage corrupt them to U+FFFD. Decode with scripts/field-encode.py --decode --encoding base64."
+        },
+        "response": {
+          "type": "string"
+        },
+        "response_encoding": {
+          "type": "string",
+          "enum": ["utf8", "base64"],
+          "description": "How `response` is stored; see request_encoding. 'base64' means decode before use."
+        },
+        "response_code": {
+          "type": "integer"
+        },
+        "auth_required": {
+          "type": "boolean"
+        },
+        "waf_bypass_used": {
+          "type": "string"
+        }
+      }
+    },
+    "artemis_ext": {
+      "type": "object",
+      "description": "ARTEMIS-specific fields (GenAI/LLM)",
+      "properties": {
+        "success_rate": {
+          "type": "object",
+          "properties": {
+            "successes": {
+              "type": "integer"
+            },
+            "attempts": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "successes",
+            "attempts"
+          ]
+        },
+        "model_identified": {
+          "type": "string"
+        },
+        "guardrail_status": {
+          "type": "string",
+          "enum": [
+            "bypassed",
+            "partially_bypassed",
+            "effective",
+            "not_present",
+            "unknown"
+          ]
+        },
+        "payload_variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "payload": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "partial"
+                ]
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "attack_vector": {
+          "type": "string",
+          "enum": [
+            "direct_injection",
+            "indirect_injection",
+            "encoding_bypass",
+            "multi_turn",
+            "many_shot",
+            "jailbreak",
+            "tool_abuse",
+            "memory_attack",
+            "output_injection"
+          ]
+        }
+      }
+    },
+    "hunter_ext": {
+      "type": "object",
+      "description": "Hunter-specific fields (Network/Infrastructure)",
+      "properties": {
+        "affected_hosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ip": {
+                "type": "string"
+              },
+              "hostname": {
+                "type": "string"
+              },
+              "os": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "ip"
+            ]
+          }
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "protocols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "service_name": {
+          "type": "string"
+        },
+        "service_version": {
+          "type": "string"
+        },
+        "cve_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exploit_used": {
+          "type": "string"
+        },
+        "access_gained": {
+          "type": "string",
+          "enum": [
+            "none",
+            "user",
+            "root",
+            "system",
+            "admin"
+          ]
+        }
+      }
+    },
+    "cloud_ext": {
+      "type": "object",
+      "description": "Nimbus-specific fields (Cloud)",
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": [
+            "aws",
+            "azure",
+            "gcp",
+            "other"
+          ]
+        },
+        "account_id": {
+          "type": "string",
+          "description": "Account / subscription / project id"
+        },
+        "region": {
+          "type": "string"
+        },
+        "service": {
+          "type": "string",
+          "description": "e.g. s3, iam, lambda, ec2, storage, gke"
+        },
+        "resource": {
+          "type": "string",
+          "description": "ARN / resource id / bucket / role name"
+        },
+        "permission": {
+          "type": "string",
+          "description": "IAM action / permission abused"
+        },
+        "exploit": {
+          "type": "string"
+        },
+        "access_gained": {
+          "type": "string",
+          "enum": [
+            "none",
+            "read",
+            "write",
+            "admin",
+            "account-takeover"
+          ]
+        }
+      }
+    },
+    "mobile_ext": {
+      "type": "object",
+      "description": "Nomad-specific fields (Mobile)",
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": [
+            "android",
+            "ios"
+          ]
+        },
+        "package_id": {
+          "type": "string",
+          "description": "App package / bundle id"
+        },
+        "component": {
+          "type": "string",
+          "description": "Activity/service/receiver/provider/deeplink/url-scheme"
+        },
+        "exported": {
+          "type": "boolean",
+          "description": "Component exported / externally reachable"
+        },
+        "permission": {
+          "type": "string"
+        },
+        "analysis": {
+          "type": "string",
+          "enum": [
+            "static",
+            "dynamic"
+          ]
+        },
+        "exploit": {
+          "type": "string"
+        },
+        "access_gained": {
+          "type": "string",
+          "enum": [
+            "none",
+            "local",
+            "data",
+            "account-takeover"
+          ]
+        }
+      }
+    },
+    "submission": {
+      "type": "object",
+      "description": "Delivery outcome -- what the receiving party decided. Written by an outcome tracker from the platform's own verdict (pulled, not hand-maintained), so it reflects the source of truth rather than operator recall. Absent until the finding is linked to a filed report.",
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "Adapter that produced this record (hackerone, bugcrowd, intigriti, pentest)."
+        },
+        "report_id": {
+          "type": "string",
+          "description": "Identifier on the receiving platform."
+        },
+        "url": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "open",
+            "accepted",
+            "duplicate",
+            "informative",
+            "rejected"
+          ],
+          "description": "Source-independent outcome class. Platform-specific states normalize into this so cross-platform stats mean one thing."
+        },
+        "state_raw": {
+          "type": "string",
+          "description": "The platform's own state string, unmapped."
+        },
+        "submitted_at": {
+          "type": "string"
+        },
+        "closed_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bounty": {
+          "type": "number",
+          "minimum": 0
+        },
+        "synced_at": {
+          "type": "string",
+          "description": "When an outcome tracker last refreshed this block."
+        }
+      },
+      "required": [
+        "source",
+        "report_id",
+        "state"
+      ]
+    },
+    "claims": {
+      "type": "array",
+      "description": "Optional claim split: each claim recorded and verdicted separately so the finding can be filed at its floor severity. Exactly one base claim when present.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "text",
+          "severity_if_true",
+          "verdict"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "base",
+              "escalation"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "severity_if_true": {
+            "enum": [
+              "critical",
+              "high",
+              "medium",
+              "low",
+              "info"
+            ]
+          },
+          "control": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "untested",
+              "survived",
+              "refuted"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "floor_severity": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info",
+        null
+      ],
+      "description": "Highest severity whose claims all survived; written by validate-finding.sh on confirm."
+    }
+  }
+}

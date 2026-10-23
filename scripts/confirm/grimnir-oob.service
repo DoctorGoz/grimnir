@@ -1,0 +1,23 @@
+# GRIMNIR OOB interaction listener (confirmation harness) — user service.
+# Install: cp to ~/.config/systemd/user/ ; create ~/.grimnir/oob/config.env (operator-local,
+# holds the public IP) ; systemctl --user enable --now grimnir-oob
+# The checkout defaults to ~/workspace/grimnir. If yours is elsewhere, add
+#   GRIMNIR_REPO_DIR=/your/checkout
+# to ~/.grimnir/oob/config.env rather than editing this unit.
+[Unit]
+Description=GRIMNIR OOB interaction listener (blind-vuln confirmation)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=GRIMNIR_REPO_DIR=%h/workspace/grimnir
+EnvironmentFile=%h/.grimnir/oob/config.env
+ExecStart=/usr/bin/env python3 ${GRIMNIR_REPO_DIR}/scripts/confirm/oob-listener.py
+Restart=on-failure
+RestartSec=5
+# log-only recorder; no privileged ports by default (high ports in config.env)
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

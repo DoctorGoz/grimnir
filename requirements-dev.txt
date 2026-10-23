@@ -1,0 +1,18 @@
+# Dependencies the test suite needs.
+#
+#   python3 -m pip install -r requirements-dev.txt
+#
+# Runtime note: everything Grimnir needs for HUNTING is stdlib. These are for the test gate.
+
+# Schema validation (without it every schema check reports [skip])
+jsonschema>=4.0
+# Playbook parsing (scripts/playbook.py)
+PyYAML>=6.0
+# Unit tests
+pytest>=7.0
+# SOCKS egress (scripts/egress.py). Optional at runtime -- a SOCKS proxy without it fails
+# closed -- but the routing tests drive a SOCKS5 stub through it.
+PySocks>=1.7
+# Browser login and the XSS render oracle (scripts/login.py, scripts/confirm/). The
+# workflow also runs `playwright install chromium`; without it these tests fail or skip.
+playwright>=1.40

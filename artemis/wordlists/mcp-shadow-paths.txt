@@ -1,0 +1,29 @@
+# MCP09 — Shadow MCP server discovery paths.
+# Used by artemis/scripts/mcp-shadow-scan.sh (feeds HUGINN recon). Fuzz these
+# against a host; any that respond to an MCP `initialize` are undeclared servers.
+# One path per line.
+
+/mcp
+/mcp/
+/sse
+/sse/
+/message
+/messages
+/mcp/sse
+/mcp/message
+/mcp/messages
+/api/mcp
+/api/v1/mcp
+/v1/mcp
+/rpc/mcp
+/mcp/rpc
+/.well-known/mcp
+/.well-known/oauth-protected-resource
+/.well-known/oauth-authorization-server
+/mcp/v1
+/tools
+/mcp-server
+/agent/mcp
+/copilot/mcp
+/assistant/mcp
+/ai/mcp
